@@ -31,7 +31,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         return res.status(400).json({ error: "未提供文件" });
       }
       const decodedFileName = decodeURIComponent(file.originalname);
-      const fileName = `${Date.now()}-${decodedFileName}`;
+      let fileName = `${Date.now()}-${decodedFileName}`;
+      const isDirectoryUpload = req.body.isDirectoryUpload === "true";
+      if (isDirectoryUpload) {
+        const directoryPrefix = "directory/"; // 统一前缀
+        fileName = `${directoryPrefix}${fileName}`;
+      }
       try {
         const result = await new Promise((resolve, reject) => {
           cos.putObject(
