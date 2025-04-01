@@ -11,7 +11,10 @@
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.2.4"
+    "next": "15.2.4",
+    "cos-nodejs-sdk-v5": "^2.13.1",
+    "jotai": "^2.12.2",
+    "multer": "^1.4.5-lts.2"
   },
   "devDependencies": {
     "typescript": "^5",
@@ -19,6 +22,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@tailwindcss/postcss": "^4",
+    "@types/multer": "^1.4.12",
+    "autoprefixer": "^10.4.21",
     "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
