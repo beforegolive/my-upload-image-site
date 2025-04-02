@@ -15,30 +15,27 @@ export default async function handler(
     const bucket = process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "";
     const region = process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "";
 
-    // 先获取存储桶中所有对象
-    const allObjects = await new Promise<{
-      Contents: { Key: string; LastModified: string }[];
-    }>((resolve, reject) => {
-      cos.getBucket(
-        {
-          Bucket: bucket,
-          Region: region,
-          Prefix: "",
-          MaxKeys: 1000, // 可根据实际情况调整
-        },
-        (err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(
-              data as { Contents: { Key: string; LastModified: string }[] }
-            );
-          }
+    const listObjectsParams = {
+      Bucket: bucket,
+      Region: region,
+      Prefix: "",
+      MaxKeys: parseInt(limit as string, 10),
+      Marker: "",
+    };
+
+    const result = await new Promise((resolve, reject) => {
+      cos.getBucket(listObjectsParams, (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
         }
-      );
+      });
     });
 
-    const { Contents = [] } = allObjects;
+    const { Contents = [] } = result as {
+      Contents: { Key: string; LastModified: string; Size: number }[];
+    };
 
     // 按上传时间倒序排列
     const sortedContents = Contents.sort((a, b) => {
@@ -52,11 +49,22 @@ export default async function handler(
     const endIndex = startIndex + parseInt(limit as string, 10);
     const paginatedContents = sortedContents.slice(startIndex, endIndex);
 
-    const imageUrls = paginatedContents.map((item) => {
-      return `https://${bucket}.cos.${region}.myqcloud.com/${item.Key}`;
+    const imageUrlsWithSize = paginatedContents.map((item) => {
+      const url = `https://${bucket}.cos.${region}.myqcloud.com/${item.Key}`;
+      console.log("生成的 Key 字段:", item.Key); // 添加日志输出
+      return {
+        url,
+        size: item.Size,
+        Key: item.Key,
+      };
     });
 
-    res.status(200).json({ imageUrls, totalCount: sortedContents.length });
+    res
+      .status(200)
+      .json({
+        imageUrls: imageUrlsWithSize,
+        totalCount: sortedContents.length,
+      });
   } catch (error) {
     console.error("获取图片列表出错:", error);
     res.status(500).json({ error: "获取图片列表出错" });

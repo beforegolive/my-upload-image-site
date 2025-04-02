@@ -19,6 +19,7 @@ const HomePage: React.FC = () => {
           `/api/get-images?page=${currentPage}&limit=${itemsPerPage}`
         );
         const data = await response.json();
+        console.log("从后端获取的图片数据:", data); // 添加日志输出
         if (response.ok) {
           setUploadedImages(data.imageUrls);
           setTotalPages(Math.ceil(data.totalCount / itemsPerPage));
