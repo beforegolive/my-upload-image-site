@@ -1,3 +1,4 @@
+// src/pages/api/upload.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import multer from "multer";
 import COS from "cos-nodejs-sdk-v5";
@@ -7,7 +8,6 @@ const cos = new COS({
   SecretKey: process.env.NEXT_PUBLIC_TENCENT_CLOUD_SECRET_KEY,
 });
 
-// 配置 multer
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -17,55 +17,59 @@ export const config = {
   },
 };
 
-const uploadMiddleware = upload.single("file");
+const uploadMiddleware = upload.array("files"); // 确保字段名是 'files'
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
     uploadMiddleware(req, res, async (err) => {
       if (err) {
-        console.error("Multer 错误:", err);
-        return res.status(500).json({ error: "文件处理出错" });
+        console.error("文件解析出错:", err);
+        return res.status(500).json({ error: "文件解析出错" });
       }
-      const file = req.file;
-      if (!file) {
+
+      const randomFactor = req.body.randomFactor;
+      const files = req.files as Express.Multer.File[];
+
+      if (!files || files.length === 0) {
         return res.status(400).json({ error: "未提供文件" });
       }
-      const decodedFileName = decodeURIComponent(file.originalname);
-      let fileName = `${Date.now()}-${decodedFileName}`;
-      const isDirectoryUpload = req.body.isDirectoryUpload === "true";
-      if (isDirectoryUpload) {
-        const directoryPrefix = "directory/"; // 统一前缀
-        fileName = `${directoryPrefix}${fileName}`;
-      }
-      try {
-        const result = await new Promise((resolve, reject) => {
-          cos.putObject(
-            {
-              Bucket: process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "",
-              Region: process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "",
-              Key: fileName,
-              StorageClass: "STANDARD",
-              Body: file.buffer,
-            },
-            (err, data) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(data);
+
+      const imageUrls: string[] = [];
+
+      for (const file of files) {
+        const key = `${randomFactor}/${file.originalname}`;
+        try {
+          await new Promise((resolve, reject) => {
+            cos.putObject(
+              {
+                Bucket: process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "",
+                Region: process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "",
+                Key: key,
+                StorageClass: "STANDARD",
+                Body: file.buffer,
+              },
+              (err, data) => {
+                if (err) {
+                  reject(err);
+                } else {
+                  const imageUrl = `https://${process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET}.cos.${process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION}.myqcloud.com/${key}`;
+                  imageUrls.push(imageUrl);
+                  resolve(data);
+                }
               }
-            }
-          );
-        });
-        const imageUrl = `https://${process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET}.cos.${process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION}.myqcloud.com/${fileName}`;
-        res.status(200).json({ imageUrl });
-      } catch (error) {
-        console.error("图片上传失败:", error);
-        res.status(500).json({ error: "上传到腾讯云出错" });
+            );
+          });
+        } catch (error) {
+          console.error("上传文件出错:", error);
+        }
       }
+
+      res.status(200).json({ imageUrls });
     });
   } else {
     res.status(405).json({ error: "方法不允许" });
   }
-};
-
-export default handler;
+}
