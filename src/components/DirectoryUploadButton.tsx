@@ -7,21 +7,24 @@ const DirectoryUploadButton: React.FC<{
 
   const handleUpload = () => {
     if (inputRef.current) {
-      // 动态设置 webkitdirectory 和 directory 属性
       inputRef.current.setAttribute("webkitdirectory", "");
       inputRef.current.setAttribute("directory", "");
       inputRef.current.click();
     }
   };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     if (input.files) {
-      const files = Array.from(input.files);
+      // 过滤以 . 开头的文件
+      const validFiles = Array.from(input.files).filter(
+        (file) => !file.name.startsWith(".")
+      );
       const randomFactor = new Date().getTime().toString();
 
       const formData = new FormData();
-      files.forEach((file) => {
-        formData.append("files", file); // 确保字段名是 'files'
+      validFiles.forEach((file) => {
+        formData.append("files", file);
       });
       formData.append("randomFactor", randomFactor);
 
