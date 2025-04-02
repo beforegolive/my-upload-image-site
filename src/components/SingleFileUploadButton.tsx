@@ -1,13 +1,19 @@
 import React, { useRef } from "react";
 
-const SingleFileUploadButton: React.FC<{
+interface SingleFileUploadButtonProps {
   setUploadedImages: (images: string[]) => void;
-}> = ({ setUploadedImages }) => {
+}
+
+const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({
+  setUploadedImages,
+}) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async () => {
     const input = inputRef.current;
     if (input && input.files && input.files.length > 0) {
+      console.log("触发文件输入框点击");
+      console.log("选择的文件数量:", input.files.length);
       const files = Array.from(input.files);
       const randomFactor = new Date().getTime().toString();
 
@@ -18,10 +24,12 @@ const SingleFileUploadButton: React.FC<{
       formData.append("randomFactor", randomFactor);
 
       try {
+        console.log("开始上传请求");
         const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
+        console.log("上传请求完成，响应状态:", response.status);
         const data = await response.json();
         if (response.ok) {
           setUploadedImages(data.imageUrls);

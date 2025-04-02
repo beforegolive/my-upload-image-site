@@ -10,59 +10,55 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === "GET") {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
-      const marker = (page - 1) * limit;
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const bucket = process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "";
+    const region = process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "";
 
-      // 先获取所有图片数量以计算总页数
-      const allImagesResult = await new Promise((resolve, reject) => {
-        cos.getBucket(
-          {
-            Bucket: process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "",
-            Region: process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "",
-          },
-          (err, data) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(data);
-            }
+    // 先获取存储桶中所有对象
+    const allObjects = await new Promise<{
+      Contents: { Key: string; LastModified: string }[];
+    }>((resolve, reject) => {
+      cos.getBucket(
+        {
+          Bucket: bucket,
+          Region: region,
+          Prefix: "",
+          MaxKeys: 1000, // 可根据实际情况调整
+        },
+        (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(
+              data as { Contents: { Key: string; LastModified: string }[] }
+            );
           }
-        );
-      });
-      const totalImages = (allImagesResult as any).Contents.length;
-      const totalPages = Math.ceil(totalImages / limit);
+        }
+      );
+    });
 
-      const result = await new Promise((resolve, reject) => {
-        cos.getBucket(
-          {
-            Bucket: process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "",
-            Region: process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "",
-            Marker: marker.toString(),
-            MaxKeys: limit.toString(),
-          },
-          (err, data) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(data);
-            }
-          }
-        );
-      });
+    const { Contents = [] } = allObjects;
 
-      const imageUrls = (result as any).Contents.map((item: any) => {
-        return `https://${process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET}.cos.${process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION}.myqcloud.com/${item.Key}`;
-      });
+    // 按上传时间倒序排列
+    const sortedContents = Contents.sort((a, b) => {
+      const dateA = new Date(a.LastModified);
+      const dateB = new Date(b.LastModified);
+      return dateB.getTime() - dateA.getTime();
+    });
 
-      res.status(200).json({ imageUrls, totalPages });
-    } catch (error) {
-      console.error("获取图片列表失败:", error);
-      res.status(500).json({ error: "获取图片列表出错" });
-    }
-  } else {
-    res.status(405).json({ error: "方法不允许" });
+    const startIndex =
+      (parseInt(page as string, 10) - 1) * parseInt(limit as string, 10);
+    const endIndex = startIndex + parseInt(limit as string, 10);
+    const paginatedContents = sortedContents.slice(startIndex, endIndex);
+
+    const imageUrls = paginatedContents.map((item) => {
+      return `https://${bucket}.cos.${region}.myqcloud.com/${item.Key}`;
+    });
+
+    res.status(200).json({ imageUrls, totalCount: sortedContents.length });
+  } catch (error) {
+    console.error("获取图片列表出错:", error);
+    res.status(500).json({ error: "获取图片列表出错" });
   }
 }

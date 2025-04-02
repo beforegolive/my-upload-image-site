@@ -21,7 +21,7 @@ const HomePage: React.FC = () => {
         const data = await response.json();
         if (response.ok) {
           setUploadedImages(data.imageUrls);
-          setTotalPages(data.totalPages);
+          setTotalPages(Math.ceil(data.totalCount / itemsPerPage));
         } else {
           console.error("获取历史图片失败:", data.error);
         }
