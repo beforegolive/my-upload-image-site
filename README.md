@@ -1,15 +1,22 @@
-用 AI 生成的站点描述：
-nextjs+jotai+typscript+腾讯云 cos+multer 创建一个图片上传站点，用 pageRouter，有 src 目录，上传的图片用列表展示出来
-支持单文件上传、拖拽上传、目录上传。
-
-图片列表按照上传时间倒序排列，两栏布局，每个数据项分左右两边，左边展示图片，右边展示图片的描述，比如名称、路径、大小等信息。
-
-图片最大宽度为 100px，高宽按图片比例呈现。点击图片会展示预览的模态框，模态框高宽不超过屏幕的 80%。
-
-每个数据项有个按钮，点击按钮复制当前图片的完整 url 路径，点击时按钮提示已复制，两秒后复原成原来的文本。
-
 ====
-记忆唤醒：
-分析一下当前项目的所有代码内容，弄清楚当前站点所有的功能点，列出来
+代码库地址：
+git@github.com:beforegolive/my-upload-image-site.git
 
-参考一下原文件
+记忆唤醒：
+分析一下当前项目的所有代码内容，弄清楚当前站点所有的功能点，并罗列出来
+
+仔细看下项目的代码，分析完后我们再继续做改造
+项目的主代码在 src 目录中。
+
+前端部分：
+图片列表组件是：ImageList.tsx
+分页组件：Pagination.tsx
+上传组件：UploadButton.tsx
+单文件上传组件：SingleFileUploadButton.tsx
+目录上传组件：DirectoryUploadButton.tsx
+图片预览组件： ImagePreviewModal.tsx
+首页：index.tsx
+
+后端部分：
+图片上传接口：api/upload.ts
+图片列表接口：api/get-images.ts
