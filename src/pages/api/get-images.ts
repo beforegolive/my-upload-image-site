@@ -1,3 +1,4 @@
+// src/pages/api/get-images.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import COS from "cos-nodejs-sdk-v5";
 
@@ -17,11 +18,6 @@ export default async function handler(
 
     let marker = "";
     if (parseInt(page as string, 10) > 1) {
-      // 计算前一页的最后一个对象的 Key 作为 Marker
-      // 这里简化处理，实际应用中需要递归调用 getBucket 获取
-      // 假设我们已经知道前一页的最后一个对象的 Key
-      // marker = "previous_page_last_key";
-      // 以下是一种可能的实现思路
       const previousPage = parseInt(page as string, 10) - 1;
       const previousResult = await new Promise((resolve, reject) => {
         const previousParams = {
@@ -69,7 +65,6 @@ export default async function handler(
       Contents: { Key: string; LastModified: string; Size: number }[];
     };
 
-    // 按上传时间倒序排列
     const sortedContents = Contents.sort((a, b) => {
       const dateA = new Date(a.LastModified);
       const dateB = new Date(b.LastModified);
@@ -82,10 +77,10 @@ export default async function handler(
         url,
         size: item.Size,
         Key: item.Key,
+        uploadTime: item.LastModified,
       };
     });
 
-    // 获取存储桶中对象的总数
     const totalCountResult = await new Promise((resolve, reject) => {
       const totalCountParams = {
         Bucket: bucket,

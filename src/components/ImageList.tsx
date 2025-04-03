@@ -1,4 +1,4 @@
-// my-upload-image-site/src/components/ImageList.tsx
+// src/components/ImageList.tsx
 import React, { useState } from "react";
 import ImagePreviewModal from "./ImagePreviewModal";
 
@@ -6,6 +6,7 @@ interface Image {
   url: string;
   size: number;
   Key: string;
+  uploadTime: string;
 }
 
 interface ImageListProps {
@@ -27,7 +28,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {images.map(({ url, size, Key }, index) => {
+      {images.map(({ url, size, Key, uploadTime }, index) => {
         let fileName = "";
         let fileExtension = "";
         if (Key && typeof Key === "string" && Key.length > 0) {
@@ -35,6 +36,9 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
           fileExtension = fileName.split(".").pop() || "";
         }
         const sizeInKb = (size / 1024).toFixed(2);
+
+        // 将 uploadTime 转换为当前电脑时区的时间
+        const localUploadTime = new Date(uploadTime).toLocaleString();
 
         return (
           <div key={index} className="flex bg-white p-4 rounded shadow">
@@ -52,6 +56,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
               <p style={{ overflowWrap: "break-word", wordBreak: "break-all" }}>
                 完整 URL: {url}
               </p>
+              <p>上传时间: {localUploadTime}</p>
             </div>
           </div>
         );
