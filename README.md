@@ -1,5 +1,5 @@
 用 AI 生成的站点描述：
-nextjs+jotai+typscript 创建一个图片上传站点，用 pageRouter，有 src 目录，上传的图片用列表展示出来
+nextjs+jotai+typscript+腾讯云 cos+multer 创建一个图片上传站点，用 pageRouter，有 src 目录，上传的图片用列表展示出来
 支持单文件上传、拖拽上传、目录上传。
 
 图片列表按照上传时间倒序排列，两栏布局，每个数据项分左右两边，左边展示图片，右边展示图片的描述，比如名称、路径、大小等信息。
