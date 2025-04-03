@@ -1,23 +1,24 @@
+// my-upload-image-site/src/components/ImageList.tsx
 import React, { useState } from "react";
 import ImagePreviewModal from "./ImagePreviewModal";
 
-interface ImageListProps {
-  images: { url: string; size: number; Key: string }[];
-  currentPage: number;
-  totalPages: number;
-  paginate: (pageNumber: number) => void;
+interface Image {
+  url: string;
+  size: number;
+  Key: string;
 }
 
-const ImageList: React.FC<ImageListProps> = ({
-  images,
-  currentPage,
-  totalPages,
-  paginate,
-}) => {
+interface ImageListProps {
+  images: Image[];
+  onImageClick: (imageUrl: string) => void;
+}
+
+const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
+    onImageClick(imageUrl);
   };
 
   const handleCloseModal = () => {
@@ -55,21 +56,6 @@ const ImageList: React.FC<ImageListProps> = ({
           </div>
         );
       })}
-      <div className="flex justify-center mt-4 col-span-2">
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button
-            key={index}
-            onClick={() => paginate(index + 1)}
-            className={`px-3 py-1 mx-1 border rounded ${
-              index + 1 === currentPage
-                ? "bg-blue-500 text-white"
-                : "bg-white text-gray-700"
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>
       <ImagePreviewModal
         isOpen={!!selectedImage}
         imageUrl={selectedImage || ""}

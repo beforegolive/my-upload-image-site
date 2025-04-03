@@ -1,8 +1,10 @@
+// my-upload-image-site/src/pages/index.tsx
 import React, { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { uploadedImagesAtom } from "../atoms";
 import ImageList from "../components/ImageList";
 import UploadButton from "../components/UploadButton";
+import Pagination from "../components/Pagination";
 
 const HomePage: React.FC = () => {
   const [uploadedImages, setUploadedImages] = useAtom(uploadedImagesAtom);
@@ -12,19 +14,14 @@ const HomePage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    console.log("当前页码:", currentPage); // 确认页码状态是否正确更新
     const fetchHistoryImages = async () => {
       setLoadingHistory(true);
       try {
         const response = await fetch(
           `/api/get-images?page=${currentPage}&limit=${itemsPerPage}`
         );
-        console.log(
-          "请求的 URL:",
-          `/api/get-images?page=${currentPage}&limit=${itemsPerPage}`
-        ); // 确认请求的 URL 是否正确
         const data = await response.json();
-        console.log("从后端获取的图片数据:", data);
+        console.log("从后端获取的图片数据:", data); // 添加日志输出
         if (response.ok) {
           setUploadedImages(data.imageUrls);
           setTotalPages(Math.ceil(data.totalCount / itemsPerPage));
@@ -41,10 +38,7 @@ const HomePage: React.FC = () => {
     fetchHistoryImages();
   }, [currentPage]);
 
-  const paginate = (pageNumber: number) => {
-    console.log("点击的页码:", pageNumber); // 确认点击的页码
-    setCurrentPage(pageNumber);
-  };
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="p-8">
@@ -55,6 +49,9 @@ const HomePage: React.FC = () => {
       )}
       <ImageList
         images={uploadedImages}
+        onImageClick={() => {}} // 可根据需要添加具体逻辑
+      />
+      <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         paginate={paginate}
