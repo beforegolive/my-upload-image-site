@@ -1,7 +1,9 @@
+// src/components/SingleFileUploadButton.tsx
 import React, { useRef } from "react";
+import { Image } from "../types";
 
 interface SingleFileUploadButtonProps {
-  setUploadedImages: (images: string[]) => void;
+  setUploadedImages: (images: Image[]) => void;
 }
 
 const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({

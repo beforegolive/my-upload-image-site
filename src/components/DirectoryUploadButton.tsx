@@ -1,7 +1,9 @@
+// src/components/DirectoryUploadButton.tsx
 import React, { useRef } from "react";
+import { Image } from "../types";
 
 const DirectoryUploadButton: React.FC<{
-  setUploadedImages: (images: string[]) => void;
+  setUploadedImages: (images: Image[]) => void;
 }> = ({ setUploadedImages }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 

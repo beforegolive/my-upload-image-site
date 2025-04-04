@@ -1,4 +1,4 @@
-// my-upload-image-site/src/pages/index.tsx
+// src/pages/index.tsx
 import React, { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { uploadedImagesAtom } from "../atoms";

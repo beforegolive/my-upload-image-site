@@ -1,13 +1,7 @@
 // src/components/ImageList.tsx
 import React, { useState } from "react";
 import ImagePreviewModal from "./ImagePreviewModal";
-
-interface Image {
-  url: string;
-  size: number;
-  Key: string;
-  uploadTime: string;
-}
+import { Image } from "../types";
 
 interface ImageListProps {
   images: Image[];

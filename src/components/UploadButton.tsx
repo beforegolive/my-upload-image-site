@@ -1,9 +1,11 @@
+// src/components/UploadButton.tsx
 import React, { useRef } from "react";
 import SingleFileUploadButton from "./SingleFileUploadButton";
 import DirectoryUploadButton from "./DirectoryUploadButton";
+import { Image } from "../types";
 
 const UploadButton: React.FC<{
-  setUploadedImages: (images: string[]) => void;
+  setUploadedImages: (images: Image[]) => void;
 }> = ({ setUploadedImages }) => {
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
