@@ -22,3 +22,9 @@ git@github.com:beforegolive/my-upload-image-site.git
 图片列表接口：api/get-images.ts
 
 分页功能：通过腾讯云 COS 中的 marker 功能实现。
+
+====
+
+### 部署腾讯云
+
+severless 命令目前仅支持 aws，尝试使用@serverless-devs/s
