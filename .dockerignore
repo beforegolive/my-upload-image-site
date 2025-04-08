@@ -1,0 +1,12 @@
+node_modules
+package-lock.json
+yarn.lock
+.git
+__tests__
+coverage
+*.log
+.next/cache
+.env.development
+.env.local
+.eslintrc
+.prettierrc
