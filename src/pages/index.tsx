@@ -35,6 +35,8 @@ const HomePage: React.FC = () => {
       }
     };
 
+    // console.log("==  fetchHistoryImages:", fetchHistoryImages);
+
     fetchHistoryImages();
   }, [currentPage]);
 

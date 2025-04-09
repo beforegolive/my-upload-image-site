@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+nextjs_project_v2.zip
+node_modules.zip
+next_zip.sh

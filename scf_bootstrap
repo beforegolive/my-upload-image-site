@@ -1,0 +1,9 @@
+#!/var/lang/node18/bin/node
+const { nextStart } = require("next/dist/cli/next-start");
+// 腾讯云官网给的错误写法，真是坑死人
+// nextStart([ '--port', '9000', '--hostname', '0.0.0.0' ])
+nextStart({ port: "9000", hostname: "0.0.0.0" });
+
+// process.argv 是 Node.js 中存储命令行参数的数组，我们模拟添加端口和主机名参数
+// process.argv.push("-p", "9000", "--hostname", "0.0.0.0");
+// nextStart();

@@ -28,3 +28,9 @@ git@github.com:beforegolive/my-upload-image-site.git
 ### 部署腾讯云
 
 severless 命令目前仅支持 aws，尝试使用@serverless-devs/s
+
+===
+
+### 腾讯云层管理依赖项打包
+
+zip -r node_modules.zip node_modules
