@@ -59,7 +59,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {images.map(({ url, size, Key, uploadTime }, index) => {
+      {images.map(({ url, size, Key, uploadTime, width, height }, index) => {
         let fileName = "";
         let fileExtension = "";
         if (Key && typeof Key === "string" && Key.length > 0) {
@@ -84,6 +84,8 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
               <p>文件名: {fileName}</p>
               <p>文件后缀: {fileExtension}</p>
               <p>文件大小: {sizeInKb} KB</p>
+              <p>图片宽度: {width}px</p>
+              <p>图片高度: {height}px</p>
               <p style={{ overflowWrap: "break-word", wordBreak: "break-all" }}>
                 完整 URL: {url}
               </p>

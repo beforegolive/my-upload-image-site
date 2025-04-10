@@ -4,4 +4,6 @@ export interface Image {
   size: number;
   Key: string;
   uploadTime: string;
+  width: number; // 新增字段
+  height: number; // 新增字段
 }
