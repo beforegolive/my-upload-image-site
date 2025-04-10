@@ -59,52 +59,43 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {images.map(
-        ({ url, size, Key, uploadTime, width = 0, height = 0 }, index) => {
-          let fileName = "";
-          let fileExtension = "";
-          if (Key && typeof Key === "string" && Key.length > 0) {
-            fileName = Key.split("/").pop() || "";
-            fileExtension = fileName.split(".").pop() || "";
-          }
-          const sizeInKb = (size / 1024).toFixed(2);
-
-          // 将 uploadTime 转换为当前电脑时区的时间
-          const localUploadTime = new Date(uploadTime).toLocaleString();
-
-          return (
-            <div
-              key={index}
-              className="flex bg-white p-4 rounded shadow text-sm"
-            >
-              <img
-                src={url}
-                alt={`Uploaded Image ${index}`}
-                style={{ width: "100px", height: "auto" }}
-                className="mr-4 cursor-pointer"
-                onClick={() => handleImageClick(url)}
-              />
-              <div className="flex flex-col justify-center text-black">
-                <p>文件名: {fileName}</p>
-                <p>
-                  尺寸: {width}x{height} px
-                </p>
-                <p>
-                  大小: {sizeInKb} KB ({fileExtension})
-                </p>
-                <p>上传时间: {localUploadTime}</p>
-              </div>
-              <button
-                className="ml-4 bg-blue-500 text-white px-2 py-1 rounded-md"
-                onClick={() => handleCopyUrl(url)}
-                disabled={disabledButtons[url]}
-              >
-                {disabledButtons[url] ? "已复制" : "复制 URL"}
-              </button>
-            </div>
-          );
+      {images.map(({ url, size, Key, uploadTime }, index) => {
+        let fileName = "";
+        let fileExtension = "";
+        if (Key && typeof Key === "string" && Key.length > 0) {
+          fileName = Key.split("/").pop() || "";
+          fileExtension = fileName.split(".").pop() || "";
         }
-      )}
+        const sizeInKb = (size / 1024).toFixed(2);
+
+        // 将 uploadTime 转换为当前电脑时区的时间
+        const localUploadTime = new Date(uploadTime).toLocaleString();
+
+        return (
+          <div key={index} className="flex bg-white p-4 rounded shadow">
+            <img
+              src={url}
+              alt={`Uploaded Image ${index}`}
+              style={{ width: "100px", height: "auto" }}
+              className="mr-4 cursor-pointer"
+              onClick={() => handleImageClick(url)}
+            />
+            <div className="flex flex-col justify-center text-black">
+              <p>文件名: {fileName}</p>
+              <p>文件后缀: {fileExtension}</p>
+              <p>文件大小: {sizeInKb} KB</p>
+              <p>上传时间: {localUploadTime}</p>
+            </div>
+            <button
+              className="ml-4 bg-blue-500 text-white px-2 py-1 rounded-md min-w-[80px] max-h-[42px]" // 添加最小宽度
+              onClick={() => handleCopyUrl(url)}
+              disabled={disabledButtons[url]}
+            >
+              {disabledButtons[url] ? "已复制" : "复制url"}
+            </button>
+          </div>
+        );
+      })}
       {toastConfig && (
         <Toast
           show={isToastVisible}
