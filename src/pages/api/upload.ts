@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import COS from "cos-nodejs-sdk-v5";
 import sharp from "sharp";
 import multer from "multer";
+import fs from "fs"; // 使用 ES6 导入 fs 模块
 
 const cos = new COS({
   SecretId: process.env.NEXT_PUBLIC_TENCENT_CLOUD_SECRET_ID,
@@ -49,7 +50,7 @@ export default async function handler(
           Bucket: bucket,
           Region: region,
           Key: key,
-          Body: require("fs").createReadStream(file.path),
+          Body: fs.createReadStream(file.path), // 使用导入的 fs 模块
         };
 
         await new Promise((resolve, reject) => {
@@ -85,7 +86,7 @@ export default async function handler(
         });
 
         // 删除临时文件
-        require("fs").unlinkSync(file.path);
+        fs.unlinkSync(file.path); // 使用导入的 fs 模块
       }
     }
 
