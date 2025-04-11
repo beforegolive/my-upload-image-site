@@ -2,6 +2,7 @@
 import React, { useRef } from "react";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
+import { maxLoadingToastDurationMs } from "@/constants";
 
 const DirectoryUploadButton: React.FC<{
   setUploadedImages: (images: Image[]) => void;
@@ -20,8 +21,11 @@ const DirectoryUploadButton: React.FC<{
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     if (input.files) {
+      console.log("开始上传，尝试显示 toast"); // 添加日志确认是否进入上传逻辑
       const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
         variant: "info",
+        preventDuplicate: true, // 防止重复显示 toast
+        autoHideDuration: maxLoadingToastDurationMs,
       });
 
       // 过滤以 . 开头的文件
