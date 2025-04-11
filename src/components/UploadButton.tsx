@@ -3,13 +3,19 @@ import React, { useRef } from "react";
 import SingleFileUploadButton from "./SingleFileUploadButton";
 import DirectoryUploadButton from "./DirectoryUploadButton";
 import { Image } from "../types";
+import { useSnackbar } from "notistack";
 
 const UploadButton: React.FC<{
   setUploadedImages: (images: Image[]) => void;
 }> = ({ setUploadedImages }) => {
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handleUpload = async (files: File[]) => {
+    const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
+      variant: "info",
+    });
+
     const randomFactor = new Date().getTime().toString();
     const formData = new FormData();
     files.forEach((file) => {
@@ -25,11 +31,17 @@ const UploadButton: React.FC<{
       const data = await response.json();
       if (response.ok) {
         setUploadedImages(data.imageUrls);
+        enqueueSnackbar("图片上传成功", { variant: "success" });
       } else {
         console.error("上传失败:", data.error);
+        enqueueSnackbar("图片上传失败，请稍后重试", { variant: "error" });
       }
     } catch (error) {
       console.error("上传出错:", error);
+      enqueueSnackbar("图片上传出错，请稍后重试", { variant: "error" });
+    } finally {
+      // 关闭上传中的 toast
+      closeSnackbar(uploadToastKey);
     }
   };
 

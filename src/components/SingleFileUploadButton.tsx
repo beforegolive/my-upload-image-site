@@ -1,6 +1,7 @@
 // src/components/SingleFileUploadButton.tsx
 import React, { useRef } from "react";
 import { Image } from "../types";
+import { useSnackbar } from "notistack";
 
 interface SingleFileUploadButtonProps {
   setUploadedImages: (images: Image[]) => void;
@@ -10,12 +11,15 @@ const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({
   setUploadedImages,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handleUpload = async () => {
     const input = inputRef.current;
     if (input && input.files && input.files.length > 0) {
-      console.log("触发文件输入框点击");
-      console.log("选择的文件数量:", input.files.length);
+      const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
+        variant: "info",
+      });
+
       const files = Array.from(input.files);
       const randomFactor = new Date().getTime().toString();
 
@@ -26,20 +30,24 @@ const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({
       formData.append("randomFactor", randomFactor);
 
       try {
-        console.log("开始上传请求");
         const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
-        console.log("上传请求完成，响应状态:", response.status);
         const data = await response.json();
         if (response.ok) {
           setUploadedImages(data.imageUrls);
+          enqueueSnackbar("图片上传成功", { variant: "success" });
         } else {
           console.error("上传失败:", data.error);
+          enqueueSnackbar("图片上传失败，请稍后重试", { variant: "error" });
         }
       } catch (error) {
         console.error("上传出错:", error);
+        enqueueSnackbar("图片上传出错，请稍后重试", { variant: "error" });
+      } finally {
+        // 关闭上传中的 toast
+        closeSnackbar(uploadToastKey);
       }
     }
   };
