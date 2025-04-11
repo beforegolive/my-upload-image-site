@@ -40,7 +40,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {images.map(({ url, size, Key, uploadTime }, index) => {
+      {images.map(({ url, size, Key, uploadTime, width, height }, index) => {
         let fileName = "";
         let fileExtension = "";
         if (Key && typeof Key === "string" && Key.length > 0) {
@@ -51,6 +51,9 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
 
         // 将 uploadTime 转换为当前电脑时区的时间
         const localUploadTime = new Date(uploadTime).toLocaleString();
+
+        // 修改文件后缀显示，同时显示后缀和原始高宽
+        const fileExtensionWithDimensions = `${fileExtension} (${width}x${height})`;
 
         return (
           <div key={index} className="flex bg-white p-4 rounded shadow">
@@ -63,7 +66,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
             />
             <div className="flex flex-col justify-center text-black">
               <p>文件名: {fileName}</p>
-              <p>文件后缀: {fileExtension}</p>
+              <p>文件后缀: {fileExtensionWithDimensions}</p>
               <p>文件大小: {sizeInKb} KB</p>
               <p>上传时间: {localUploadTime}</p>
             </div>
