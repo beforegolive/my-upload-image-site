@@ -70,9 +70,28 @@ export default async function handler(
           });
         });
         // 读取图片宽高信息
-        const metadata = await sharp(imageData).metadata();
-        const width = metadata.width || 0;
-        const height = metadata.height || 0;
+
+        let width = 0;
+        let height = 0;
+        if (
+          item.Key.endsWith(".png") ||
+          item.Key.endsWith(".jpg") ||
+          item.Key.endsWith(".jpeg") ||
+          item.Key.endsWith(".webp") ||
+          item.Key.endsWith(".gif")
+        ) {
+          try {
+            // 读取图片宽高信息
+            const metadata = await sharp(imageData).metadata();
+            width = metadata.width || 0;
+            height = metadata.height || 0;
+          } catch (error) {
+            console.warn(
+              `文件 ${item.Key} 不是有效的图片格式，跳过读取宽高信息。error: ${error}`
+            );
+          }
+        }
+
         return {
           url,
           size: item.Size,

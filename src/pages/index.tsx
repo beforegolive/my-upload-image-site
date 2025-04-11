@@ -8,6 +8,7 @@ import Pagination from "../components/Pagination";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
+import { maxLoadingToastDurationMs } from "@/constants";
 
 const HomePage: React.FC = () => {
   const router = useRouter();
@@ -32,9 +33,12 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchHistoryImages = async () => {
       setLoadingHistory(true);
-      const key = enqueueSnackbar("正在加载历史图片，请稍候...", {
+      const key = enqueueSnackbar("加载图片中...", {
         variant: "info",
+        autoHideDuration: maxLoadingToastDurationMs,
+        // maxLoadingToastDurationMs
       });
+
       setLoadingSnackbarKey(key);
 
       try {

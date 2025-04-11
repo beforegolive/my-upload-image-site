@@ -4,6 +4,7 @@ import SingleFileUploadButton from "./SingleFileUploadButton";
 import DirectoryUploadButton from "./DirectoryUploadButton";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
+import { maxLoadingToastDurationMs } from "@/constants";
 
 const UploadButton: React.FC<{
   setUploadedImages: (images: Image[]) => void;
@@ -14,6 +15,8 @@ const UploadButton: React.FC<{
   const handleUpload = async (files: File[]) => {
     const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
       variant: "info",
+      preventDuplicate: true, // 防止重复显示 toast
+      autoHideDuration: maxLoadingToastDurationMs,
     });
 
     const randomFactor = new Date().getTime().toString();
