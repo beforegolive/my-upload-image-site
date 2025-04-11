@@ -16,7 +16,10 @@ const HomePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const [totalPages, setTotalPages] = useState(0);
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const [loadingSnackbarKey, setLoadingSnackbarKey] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -29,7 +32,10 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchHistoryImages = async () => {
       setLoadingHistory(true);
-      enqueueSnackbar("正在加载历史图片，请稍候...", { variant: "info" });
+      const key = enqueueSnackbar("正在加载历史图片，请稍候...", {
+        variant: "info",
+      });
+      setLoadingSnackbarKey(key);
 
       try {
         const response = await fetch(
@@ -54,6 +60,14 @@ const HomePage: React.FC = () => {
 
     fetchHistoryImages();
   }, [currentPage, enqueueSnackbar]);
+
+  // 监听 loadingSnackbarKey 的变化，当 loadingHistory 为 false 时关闭 snackbar
+  useEffect(() => {
+    if (!loadingHistory && loadingSnackbarKey) {
+      closeSnackbar(loadingSnackbarKey);
+      setLoadingSnackbarKey(null); // 关闭后重置 key
+    }
+  }, [loadingHistory, loadingSnackbarKey, closeSnackbar]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -80,9 +94,9 @@ const HomePage: React.FC = () => {
           paginate={paginate}
         />
       </div>
-      {loadingHistory && (
+      {/* {loadingHistory && (
         <div className="mt-4 text-gray-600 text-lg">正在加载历史图片...</div>
-      )}
+      )} */}
       <ImageList images={uploadedImages} onImageClick={() => {}} />
       {/* 保留原有的分页组件 */}
       <Pagination
