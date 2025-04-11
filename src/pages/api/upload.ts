@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import COS from "cos-nodejs-sdk-v5";
 import sharp from "sharp";
 import multer from "multer";
-import fs from "fs"; // 使用 ES6 导入 fs 模块
+import fs from "fs";
 
 const cos = new COS({
   SecretId: process.env.NEXT_PUBLIC_TENCENT_CLOUD_SECRET_ID,
@@ -39,18 +39,51 @@ export default async function handler(
 
     const bucket = process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "";
     const region = process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "";
+    const compress = req.body.compress === "true";
 
     const uploadedImages = [];
 
     if (req.files) {
       const files = req.files as Express.Multer.File[];
       for (const file of files) {
+        const filePath = file.path;
+        let size = file.size; // 初始化尺寸为原始尺寸
+
+        if (compress) {
+          try {
+            let compressedImage;
+            if (file.originalname.endsWith(".png")) {
+              // 针对 PNG 图片的压缩方法
+              compressedImage = await sharp(filePath)
+                .png({ quality: 80, compressionLevel: 9 })
+                .toBuffer();
+            } else if (
+              file.originalname.endsWith(".jpg") ||
+              file.originalname.endsWith(".jpeg")
+            ) {
+              // 针对 JPG 图片的压缩方法
+              compressedImage = await sharp(filePath)
+                .jpeg({ quality: 70 })
+                .toBuffer();
+            }
+
+            if (compressedImage) {
+              fs.writeFileSync(filePath, compressedImage);
+              // 获取压缩后的文件大小
+              const stats = fs.statSync(filePath);
+              size = stats.size;
+            }
+          } catch (error) {
+            console.error("图片压缩出错:", error);
+          }
+        }
+
         const key = `uploads/${Date.now()}-${file.originalname}`;
         const putObjectParams = {
           Bucket: bucket,
           Region: region,
           Key: key,
-          Body: fs.createReadStream(file.path), // 使用导入的 fs 模块
+          Body: fs.createReadStream(filePath),
         };
 
         await new Promise((resolve, reject) => {
@@ -67,7 +100,7 @@ export default async function handler(
         let width = 0;
         let height = 0;
         try {
-          const metadata = await sharp(file.path).metadata();
+          const metadata = await sharp(filePath).metadata();
           width = metadata.width || 0;
           height = metadata.height || 0;
         } catch (error) {
@@ -78,7 +111,7 @@ export default async function handler(
 
         uploadedImages.push({
           url,
-          size: file.size,
+          size,
           Key: key,
           uploadTime: new Date().toISOString(),
           width,
@@ -86,7 +119,7 @@ export default async function handler(
         });
 
         // 删除临时文件
-        fs.unlinkSync(file.path); // 使用导入的 fs 模块
+        fs.unlinkSync(filePath);
       }
     }
 

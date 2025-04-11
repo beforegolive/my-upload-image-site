@@ -1,4 +1,3 @@
-// src/components/DirectoryUploadButton.tsx
 import React, { useRef } from "react";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
@@ -21,20 +20,19 @@ const DirectoryUploadButton: React.FC<{
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     if (input.files) {
-      console.log("开始上传，尝试显示 toast"); // 添加日志确认是否进入上传逻辑
+      console.log("开始上传，尝试显示 toast");
       const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
         variant: "info",
-        preventDuplicate: true, // 防止重复显示 toast
+        preventDuplicate: true,
         autoHideDuration: maxLoadingToastDurationMs,
       });
 
-      // 过滤以 . 开头的文件
       const validFiles = Array.from(input.files).filter(
         (file) => !file.name.startsWith(".")
       );
       const randomFactor = new Date().getTime().toString();
-
       const formData = new FormData();
+      formData.append("compress", "true"); // 假设默认启用压缩
       validFiles.forEach((file) => {
         formData.append("files", file);
       });
@@ -57,7 +55,6 @@ const DirectoryUploadButton: React.FC<{
         console.error("上传出错:", error);
         enqueueSnackbar("图片上传出错，请稍后重试", { variant: "error" });
       } finally {
-        // 关闭上传中的 toast
         closeSnackbar(uploadToastKey);
       }
     }

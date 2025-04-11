@@ -1,7 +1,7 @@
-// src/components/SingleFileUploadButton.tsx
 import React, { useRef } from "react";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
+import { maxLoadingToastDurationMs } from "@/constants";
 
 interface SingleFileUploadButtonProps {
   setUploadedImages: (images: Image[]) => void;
@@ -18,12 +18,14 @@ const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({
     if (input.files && input.files.length > 0) {
       const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
         variant: "info",
+        preventDuplicate: true,
+        autoHideDuration: maxLoadingToastDurationMs,
       });
 
       const files = Array.from(input.files);
       const randomFactor = new Date().getTime().toString();
-
       const formData = new FormData();
+      formData.append("compress", "true"); // 假设默认启用压缩
       files.forEach((file) => {
         formData.append("files", file);
       });
@@ -46,7 +48,6 @@ const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({
         console.error("上传出错:", error);
         enqueueSnackbar("图片上传出错，请稍后重试", { variant: "error" });
       } finally {
-        // 关闭上传中的 toast
         closeSnackbar(uploadToastKey);
       }
     }
