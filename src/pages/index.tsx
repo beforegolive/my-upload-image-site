@@ -72,10 +72,19 @@ const HomePage: React.FC = () => {
         退出登录
       </button>
       <UploadButton setUploadedImages={setUploadedImages} />
+      {/* 在图片列表上方添加分页组件，并添加边距 */}
+      <div className="mt-4 mb-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          paginate={paginate}
+        />
+      </div>
       {loadingHistory && (
         <div className="mt-4 text-gray-600 text-lg">正在加载历史图片...</div>
       )}
       <ImageList images={uploadedImages} onImageClick={() => {}} />
+      {/* 保留原有的分页组件 */}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
