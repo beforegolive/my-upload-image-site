@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import ImagePreviewModal from "./ImagePreviewModal";
 import { Image } from "../types";
-import Toast from "./Toast";
+import { useSnackbar } from "notistack";
 
 interface ImageListProps {
   images: Image[];
@@ -14,12 +14,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
   const [disabledButtons, setDisabledButtons] = useState<{
     [key: string]: boolean;
   }>({});
-  const [isToastVisible, setIsToastVisible] = useState(false);
-  const [toastConfig, setToastConfig] = useState<{
-    message: string;
-    type: "success" | "error";
-    duration: number;
-  } | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
@@ -30,31 +25,17 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
     setSelectedImage(null);
   };
 
-  const showToast = (
-    message: string,
-    type: "success" | "error",
-    duration = 1500
-  ) => {
-    setToastConfig({ message, type, duration });
-    setIsToastVisible(true);
-  };
-
   const handleCopyUrl = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
-      showToast("URL 复制成功", "success");
+      enqueueSnackbar("URL 复制成功", { variant: "success" });
       setDisabledButtons((prev) => ({ ...prev, [url]: true }));
       setTimeout(() => {
         setDisabledButtons((prev) => ({ ...prev, [url]: false }));
       }, 2000);
     } catch (err) {
-      showToast("URL 复制失败", "error");
+      enqueueSnackbar("URL 复制失败", { variant: "error" });
     }
-  };
-
-  const handleToastHide = () => {
-    setIsToastVisible(false);
-    setToastConfig(null);
   };
 
   return (
@@ -87,7 +68,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
               <p>上传时间: {localUploadTime}</p>
             </div>
             <button
-              className="ml-4 bg-blue-500 text-white px-2 py-1 rounded-md min-w-[80px] max-h-[42px]" // 添加最小宽度
+              className="ml-4 bg-blue-500 text-white px-2 py-1 rounded-md min-w-[80px] max-h-[42px]"
               onClick={() => handleCopyUrl(url)}
               disabled={disabledButtons[url]}
             >
@@ -96,15 +77,6 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
           </div>
         );
       })}
-      {toastConfig && (
-        <Toast
-          show={isToastVisible}
-          message={toastConfig.message}
-          type={toastConfig.type}
-          duration={toastConfig.duration}
-          onHide={handleToastHide}
-        />
-      )}
       <ImagePreviewModal
         isOpen={!!selectedImage}
         imageUrl={selectedImage || ""}

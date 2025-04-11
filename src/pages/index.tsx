@@ -7,6 +7,7 @@ import UploadButton from "../components/UploadButton";
 import Pagination from "../components/Pagination";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
+import { useSnackbar } from "notistack";
 
 const HomePage: React.FC = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ const HomePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const [totalPages, setTotalPages] = useState(0);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -27,6 +29,8 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchHistoryImages = async () => {
       setLoadingHistory(true);
+      enqueueSnackbar("正在加载历史图片，请稍候...", { variant: "info" });
+
       try {
         const response = await fetch(
           `/api/get-images?page=${currentPage}&limit=${itemsPerPage}`
@@ -38,16 +42,18 @@ const HomePage: React.FC = () => {
           setTotalPages(Math.ceil(data.totalCount / itemsPerPage));
         } else {
           console.error("获取历史图片失败:", data.error);
+          enqueueSnackbar("获取历史图片失败，请稍后重试", { variant: "error" });
         }
       } catch (error) {
         console.error("获取历史图片出错:", error);
+        enqueueSnackbar("获取历史图片出错，请稍后重试", { variant: "error" });
       } finally {
         setLoadingHistory(false);
       }
     };
 
     fetchHistoryImages();
-  }, [currentPage]);
+  }, [currentPage, enqueueSnackbar]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
