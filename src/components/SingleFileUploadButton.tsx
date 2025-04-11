@@ -13,9 +13,9 @@ const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const handleUpload = async () => {
-    const input = inputRef.current;
-    if (input && input.files && input.files.length > 0) {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.files && input.files.length > 0) {
       const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
         variant: "info",
       });
@@ -59,13 +59,10 @@ const SingleFileUploadButton: React.FC<SingleFileUploadButtonProps> = ({
         ref={inputRef}
         multiple
         accept="image/*"
-        style={{ display: "none" }}
+        onChange={handleFileSelect}
       />
       <button
-        onClick={() => {
-          inputRef.current?.click();
-          handleUpload();
-        }}
+        onClick={() => inputRef.current?.click()}
         className="bg-blue-500 text-white px-4 py-2 rounded-md"
       >
         单独上传图片
