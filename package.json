@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 9000",
     "lint": "next lint",
-    "zip": "node ./next_zip_v2.sh"
+    "zip": "./next_zip_v2.sh"
   },
   "dependencies": {
     "cookie": "^1.0.2",

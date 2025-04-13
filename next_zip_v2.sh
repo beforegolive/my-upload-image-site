@@ -20,6 +20,7 @@ INCLUDE_FILES=("package.json" "package-lock.json" "index.js" "scf_bootstrap")
 # 创建 ZIP 文件
 ZIP_FILENAME="nextjs_project_v2.zip"
 
+
 # 初始化 ZIP 文件
 if [ -f "$ZIP_FILENAME" ]; then
     rm "$ZIP_FILENAME"
