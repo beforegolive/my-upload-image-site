@@ -9,10 +9,14 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
 import { maxLoadingToastDurationMs } from "@/constants";
+import { useParams } from "next/navigation";
 
 const defaultSnackBarKey = "";
 const HomePage: React.FC = () => {
   const router = useRouter();
+  const searchParams = useParams();
+  // const adminToken = searchParams.get("token") || "";
+  const adminToken = searchParams?.token || "";
   const [uploadedImages, setUploadedImages] = useAtom(uploadedImagesAtom);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,45 +27,48 @@ const HomePage: React.FC = () => {
     defaultSnackBarKey
   );
 
+  const fetchHistoryImages = async () => {
+    setLoadingHistory(true);
+    const key = enqueueSnackbar("加载图片中...", {
+      variant: "info",
+      autoHideDuration: maxLoadingToastDurationMs,
+      // maxLoadingToastDurationMs
+    });
+
+    setLoadingSnackbarKey(key);
+
+    try {
+      const response = await fetch(
+        `/api/get-images?page=${currentPage}&limit=${itemsPerPage}`
+      );
+      const data = await response.json();
+      console.log("从后端获取的图片数据:", data);
+      if (response.ok) {
+        setUploadedImages(data.imageUrls);
+        setTotalPages(Math.ceil(data.totalCount / itemsPerPage));
+      } else {
+        console.error("获取历史图片失败:", data.error);
+        enqueueSnackbar("获取历史图片失败，请稍后重试", { variant: "error" });
+      }
+    } catch (error) {
+      console.error("获取历史图片出错:", error);
+      enqueueSnackbar("获取历史图片出错，请稍后重试", { variant: "error" });
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   useEffect(() => {
     const token = Cookies.get("token");
-    if (!token) {
+    const params = new URLSearchParams(window.location.search);
+    const mockToken = params.get("token");
+
+    if (!token && !mockToken) {
       // 未登录，重定向到登录页
       router.push("/login");
+
+      return;
     }
-  }, []);
-
-  useEffect(() => {
-    const fetchHistoryImages = async () => {
-      setLoadingHistory(true);
-      const key = enqueueSnackbar("加载图片中...", {
-        variant: "info",
-        autoHideDuration: maxLoadingToastDurationMs,
-        // maxLoadingToastDurationMs
-      });
-
-      setLoadingSnackbarKey(key);
-
-      try {
-        const response = await fetch(
-          `/api/get-images?page=${currentPage}&limit=${itemsPerPage}`
-        );
-        const data = await response.json();
-        console.log("从后端获取的图片数据:", data);
-        if (response.ok) {
-          setUploadedImages(data.imageUrls);
-          setTotalPages(Math.ceil(data.totalCount / itemsPerPage));
-        } else {
-          console.error("获取历史图片失败:", data.error);
-          enqueueSnackbar("获取历史图片失败，请稍后重试", { variant: "error" });
-        }
-      } catch (error) {
-        console.error("获取历史图片出错:", error);
-        enqueueSnackbar("获取历史图片出错，请稍后重试", { variant: "error" });
-      } finally {
-        setLoadingHistory(false);
-      }
-    };
 
     fetchHistoryImages();
   }, [currentPage, enqueueSnackbar]);

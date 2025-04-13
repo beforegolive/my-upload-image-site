@@ -1,10 +1,11 @@
 // src/pages/login.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
