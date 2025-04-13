@@ -61,6 +61,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const token = Cookies.get("token");
     const params = new URLSearchParams(window.location.search);
+    // 给我个人留的快捷入口，方便测试
     const mockToken = params.get("token");
 
     if (!token && !mockToken) {
