@@ -28,6 +28,7 @@ export default async function handler(
 ) {
   try {
     await new Promise((resolve, reject) => {
+      // @ts-expect-error 类型不匹配
       uploadMiddleware(req, res, (err) => {
         if (err) {
           reject(err);
@@ -43,7 +44,9 @@ export default async function handler(
 
     const uploadedImages = [];
 
+    // @ts-expect-error 类型不匹配
     if (req.files) {
+      // @ts-expect-error 类型不匹配
       const files = req.files as Express.Multer.File[];
       for (const file of files) {
         const filePath = file.path;

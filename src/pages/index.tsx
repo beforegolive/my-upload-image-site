@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
 import { maxLoadingToastDurationMs } from "@/constants";
 
+const defaultSnackBarKey = "";
 const HomePage: React.FC = () => {
   const router = useRouter();
   const [uploadedImages, setUploadedImages] = useAtom(uploadedImagesAtom);
@@ -18,8 +19,8 @@ const HomePage: React.FC = () => {
   const itemsPerPage = 20;
   const [totalPages, setTotalPages] = useState(0);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const [loadingSnackbarKey, setLoadingSnackbarKey] = useState<number | null>(
-    null
+  const [loadingSnackbarKey, setLoadingSnackbarKey] = useState<string | number>(
+    defaultSnackBarKey
   );
 
   useEffect(() => {
@@ -69,7 +70,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     if (!loadingHistory && loadingSnackbarKey) {
       closeSnackbar(loadingSnackbarKey);
-      setLoadingSnackbarKey(null); // 关闭后重置 key
+      setLoadingSnackbarKey(defaultSnackBarKey); // 关闭后重置 key
     }
   }, [loadingHistory, loadingSnackbarKey, closeSnackbar]);
 
