@@ -33,7 +33,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
       setTimeout(() => {
         setDisabledButtons((prev) => ({ ...prev, [url]: false }));
       }, 2000);
-    } catch (err) {
+    } catch {
       enqueueSnackbar("URL 复制失败", { variant: "error" });
     }
   };
