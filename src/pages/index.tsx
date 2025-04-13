@@ -9,14 +9,12 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useSnackbar } from "notistack";
 import { maxLoadingToastDurationMs } from "@/constants";
-import { useParams } from "next/navigation";
 
 const defaultSnackBarKey = "";
 const HomePage: React.FC = () => {
   const router = useRouter();
-  const searchParams = useParams();
   // const adminToken = searchParams.get("token") || "";
-  const adminToken = searchParams?.token || "";
+
   const [uploadedImages, setUploadedImages] = useAtom(uploadedImagesAtom);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
