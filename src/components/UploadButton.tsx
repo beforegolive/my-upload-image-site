@@ -7,7 +7,6 @@ import { maxLoadingToastDurationMs } from "@/constants";
 const UploadButton: React.FC<{
   setUploadedImages: (images: Image[]) => void;
 }> = ({ setUploadedImages }) => {
-  const dropZoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isCompressionEnabled, setIsCompressionEnabled] = useState(true);
@@ -48,21 +47,6 @@ const UploadButton: React.FC<{
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const dt = e.dataTransfer;
-    if (dt && dt.files.length > 0) {
-      const files = Array.from(dt.files);
-      handleUpload(files);
-    }
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
@@ -75,18 +59,15 @@ const UploadButton: React.FC<{
   };
 
   return (
-    <div
-      ref={dropZoneRef}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onClick={handleClick}
-      className="border border-dashed border-gray-400 p-4 rounded-md text-center text-gray-600 cursor-pointer"
-    >
-      <p>点击选择图片或 MP3 文件，或拖拽文件到此处上传</p>
-      <div className="mt-4">
-        <DirectoryUploadButton setUploadedImages={setUploadedImages} />
-      </div>
-      <div className="mt-4 flex items-center justify-center">
+    <div className="flex items-center space-x-4">
+      <button
+        onClick={handleClick}
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        单一文件上传
+      </button>
+      <DirectoryUploadButton setUploadedImages={setUploadedImages} />
+      <div className="flex items-center">
         <input
           type="checkbox"
           id="compressCheckbox"
@@ -100,7 +81,6 @@ const UploadButton: React.FC<{
       <input
         ref={fileInputRef}
         type="file"
-        // 新增 .json 扩展名
         accept="image/jpeg, image/png, audio/mpeg, application/json"
         onChange={handleFileChange}
         style={{ display: "none" }}

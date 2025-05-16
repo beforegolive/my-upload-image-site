@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import ImagePreviewModal from "./ImagePreviewModal";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
+import jsonIcon from "@/assets/imgs/json_icon.png";
+import mp3Icon from "@/assets/imgs/mp3_icon.jpeg";
 
 interface ImageListProps {
   images: Image[];
@@ -48,18 +50,21 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
           fileExtension = fileName.split(".").pop() || "";
         }
         const sizeInKb = (size / 1024).toFixed(2);
-
-        // 将 uploadTime 转换为当前电脑时区的时间
         const localUploadTime = new Date(uploadTime).toLocaleString();
-
-        // 修改文件后缀显示，同时显示后缀和原始高宽
-        const fileExtensionWithDimensions = `${fileExtension} (${width}x${height})`;
+        const isJson = fileExtension.toLowerCase() === "json";
+        const isMp3 = fileExtension.toLowerCase() === "mp3";
+        const displayIcon = isJson ? jsonIcon : isMp3 ? mp3Icon : null;
+        const fileExtensionWithDimensions =
+          isJson || isMp3
+            ? fileExtension
+            : `${fileExtension} (${width}x${height})`;
 
         return (
           <div key={index} className="flex bg-white p-4 rounded shadow">
             <img
-              src={url}
-              alt={`Uploaded Image ${index}`}
+              src={displayIcon?.src || url}
+              // src={jsonIcon.}
+              alt={`Uploaded File ${index}`}
               style={{ width: "100px", height: "auto" }}
               className="mr-4 cursor-pointer"
               onClick={() => handleImageClick(url)}

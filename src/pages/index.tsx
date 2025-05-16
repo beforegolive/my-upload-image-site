@@ -87,9 +87,18 @@ const HomePage: React.FC = () => {
     router.push("/login");
   };
 
+  const handleTitleClick = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="p-8 relative">
-      <h1 className="text-4xl font-bold mb-4">文件上传站点</h1>
+      <h1
+        onClick={handleTitleClick}
+        className="text-4xl font-bold mb-4 cursor-pointer"
+      >
+        文件上传站点
+      </h1>
       <button
         onClick={handleLogout}
         className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 text-sm rounded-md"
@@ -105,9 +114,6 @@ const HomePage: React.FC = () => {
           paginate={paginate}
         />
       </div>
-      {/* {loadingHistory && (
-        <div className="mt-4 text-gray-600 text-lg">正在加载历史图片...</div>
-      )} */}
       <ImageList images={uploadedImages} onImageClick={() => {}} />
       {/* 保留原有的分页组件 */}
       <Pagination
