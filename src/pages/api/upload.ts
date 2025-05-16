@@ -21,8 +21,9 @@ const allowedFileTypes = [
   // 原有的文件类型
   'image/jpeg',
   'image/png',
-  // 新增 .mp3 对应的 MIME 类型
-  'audio/mpeg' 
+  'audio/mpeg',
+  // 新增 .json 对应的 MIME 类型
+  'application/json' 
 ];
 
 export const config = {

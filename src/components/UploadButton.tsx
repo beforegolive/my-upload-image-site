@@ -1,5 +1,4 @@
 import React, { useRef, useState } from "react";
-import SingleFileUploadButton from "./SingleFileUploadButton";
 import DirectoryUploadButton from "./DirectoryUploadButton";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
@@ -14,7 +13,7 @@ const UploadButton: React.FC<{
   const [isCompressionEnabled, setIsCompressionEnabled] = useState(true);
 
   const handleUpload = async (files: File[]) => {
-    const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
+    const uploadToastKey = enqueueSnackbar("正在上传文件，请稍候...", {
       variant: "info",
       preventDuplicate: true,
       autoHideDuration: maxLoadingToastDurationMs,
@@ -36,14 +35,14 @@ const UploadButton: React.FC<{
       const data = await response.json();
       if (response.ok) {
         setUploadedImages(data.imageUrls);
-        enqueueSnackbar("图片上传成功", { variant: "success" });
+        enqueueSnackbar("文件上传成功", { variant: "success" });
       } else {
         console.error("上传失败:", data.error);
-        enqueueSnackbar("图片上传失败，请稍后重试", { variant: "error" });
+        enqueueSnackbar("文件上传失败，请稍后重试", { variant: "error" });
       }
     } catch (error) {
       console.error("上传出错:", error);
-      enqueueSnackbar("图片上传出错，请稍后重试", { variant: "error" });
+      enqueueSnackbar("文件上传出错，请稍后重试", { variant: "error" });
     } finally {
       closeSnackbar(uploadToastKey);
     }
@@ -80,10 +79,10 @@ const UploadButton: React.FC<{
       ref={dropZoneRef}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onClick={handleClick}
       className="border border-dashed border-gray-400 p-4 rounded-md text-center text-gray-600 cursor-pointer"
     >
-      <p onClick={handleClick}>点击选择图片或拖拽图片到此处上传</p>
-      <SingleFileUploadButton setUploadedImages={setUploadedImages} />
+      <p>点击选择图片或 MP3 文件，或拖拽文件到此处上传</p>
       <div className="mt-4">
         <DirectoryUploadButton setUploadedImages={setUploadedImages} />
       </div>
@@ -101,7 +100,8 @@ const UploadButton: React.FC<{
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg, image/png, audio/mpeg"
+        // 新增 .json 扩展名
+        accept="image/jpeg, image/png, audio/mpeg, application/json"
         onChange={handleFileChange}
         style={{ display: "none" }}
       />
