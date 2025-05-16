@@ -9,6 +9,7 @@ const UploadButton: React.FC<{
   setUploadedImages: (images: Image[]) => void;
 }> = ({ setUploadedImages }) => {
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isCompressionEnabled, setIsCompressionEnabled] = useState(true);
 
@@ -63,6 +64,17 @@ const UploadButton: React.FC<{
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      handleUpload(files);
+    }
+  };
+
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div
       ref={dropZoneRef}
@@ -70,7 +82,7 @@ const UploadButton: React.FC<{
       onDrop={handleDrop}
       className="border border-dashed border-gray-400 p-4 rounded-md text-center text-gray-600 cursor-pointer"
     >
-      <p>点击选择图片或拖拽图片到此处上传</p>
+      <p onClick={handleClick}>点击选择图片或拖拽图片到此处上传</p>
       <SingleFileUploadButton setUploadedImages={setUploadedImages} />
       <div className="mt-4">
         <DirectoryUploadButton setUploadedImages={setUploadedImages} />
@@ -86,6 +98,13 @@ const UploadButton: React.FC<{
           启用图片压缩
         </label>
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg, image/png, audio/mpeg"
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+      />
     </div>
   );
 };

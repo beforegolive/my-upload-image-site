@@ -16,6 +16,15 @@ const upload = multer({ dest: "uploads/" });
 // 处理多个文件上传
 const uploadMiddleware = upload.array("files");
 
+// 定义允许的文件类型列表
+const allowedFileTypes = [
+  // 原有的文件类型
+  'image/jpeg',
+  'image/png',
+  // 新增 .mp3 对应的 MIME 类型
+  'audio/mpeg' 
+];
+
 export const config = {
   api: {
     bodyParser: false,
@@ -49,6 +58,11 @@ export default async function handler(
       // @ts-expect-error 类型不匹配
       const files = req.files as Express.Multer.File[];
       for (const file of files) {
+        // 检查文件类型
+        if (!allowedFileTypes.includes(file.mimetype)) {
+          return res.status(400).json({ error: '不支持的文件类型' });
+        }
+
         const filePath = file.path;
         let size = file.size; // 初始化尺寸为原始尺寸
 
