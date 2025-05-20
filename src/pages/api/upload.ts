@@ -4,6 +4,7 @@ import COS from "cos-nodejs-sdk-v5";
 import sharp from "sharp";
 import multer from "multer";
 import fs from "fs";
+import path from "path";
 
 const cos = new COS({
   SecretId: process.env.NEXT_PUBLIC_TENCENT_CLOUD_SECRET_ID,
@@ -33,6 +34,41 @@ export const config = {
     bodyParser: false,
   },
 };
+
+// MIME类型映射表
+const mimeTypeMap = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".bmp": "image/bmp",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".js": "application/javascript",
+  ".css": "text/css",
+  ".html": "text/html",
+  ".htm": "text/html",
+  ".json": "application/json",
+  ".txt": "text/plain",
+  ".pdf": "application/pdf",
+  ".mp3": "audio/mpeg",
+  ".mp4": "video/mp4",
+  ".zip": "application/zip",
+  ".gz": "application/gzip",
+  ".tar": "application/x-tar",
+  ".xml": "application/xml",
+};
+
+/**
+ * 根据文件扩展名获取MIME类型
+ * @param {string} filePath - 文件路径
+ * @returns {string} - MIME类型
+ */
+function getMimeType(filePath: string) {
+  const ext: string = path.extname(filePath).toLowerCase();
+  // @ts-ignore
+  return mimeTypeMap[ext] || "application/octet-stream";
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -98,12 +134,15 @@ export default async function handler(
           }
         }
 
+        const originalMimeType = getMimeType(file?.originalname);
+
         const key = `uploads/${Date.now()}-${file.originalname}`;
         const putObjectParams = {
           Bucket: bucket,
           Region: region,
           Key: key,
           Body: fs.createReadStream(filePath),
+          ContentType: originalMimeType,
         };
 
         await new Promise((resolve, reject) => {
@@ -129,6 +168,9 @@ export default async function handler(
           );
         }
 
+        const response = await fetch(url, { method: "HEAD" }); // 发送 HEAD 请求，只获取响应头
+        const mimeType = response.headers.get("Content-Type") || "";
+
         uploadedImages.push({
           url,
           size,
@@ -136,6 +178,7 @@ export default async function handler(
           uploadTime: new Date().toISOString(),
           width,
           height,
+          mimeType,
         });
 
         // 删除临时文件
