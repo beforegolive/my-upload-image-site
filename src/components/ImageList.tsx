@@ -5,6 +5,7 @@ import { Image } from "../types";
 import { useSnackbar } from "notistack";
 import jsonIcon from "@/assets/imgs/json_icon.png";
 import mp3Icon from "@/assets/imgs/mp3_icon.jpeg";
+import xmlIcon from "@/assets/imgs/xml_icon.png"; // 假设图标路径是这样，根据实际情况调整
 
 interface ImageListProps {
   images: Image[];
@@ -53,9 +54,16 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
         const localUploadTime = new Date(uploadTime).toLocaleString();
         const isJson = fileExtension.toLowerCase() === "json";
         const isMp3 = fileExtension.toLowerCase() === "mp3";
-        const displayIcon = isJson ? jsonIcon : isMp3 ? mp3Icon : null;
+        const isXml = fileExtension.toLowerCase() === "xml"; // 判断是否为 xml 文件
+        const displayIcon = isJson
+          ? jsonIcon
+          : isMp3
+          ? mp3Icon
+          : isXml
+          ? xmlIcon
+          : null;
         const fileExtensionWithDimensions =
-          isJson || isMp3
+          isJson || isMp3 || isXml
             ? fileExtension
             : `${fileExtension} (${width}x${height})`;
 
@@ -63,7 +71,6 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
           <div key={index} className="flex bg-white p-4 rounded shadow">
             <img
               src={displayIcon?.src || url}
-              // src={jsonIcon.}
               alt={`Uploaded File ${index}`}
               style={{ width: "100px", height: "auto" }}
               className="mr-4 cursor-pointer"

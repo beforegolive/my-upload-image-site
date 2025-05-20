@@ -81,7 +81,8 @@ const UploadButton: React.FC<{
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg, image/png, audio/mpeg, application/json"
+        // 添加 application/xml 支持 xml 文件上传
+        accept="image/jpeg, image/png, audio/mpeg, application/json, application/xml"
         onChange={handleFileChange}
         style={{ display: "none" }}
       />

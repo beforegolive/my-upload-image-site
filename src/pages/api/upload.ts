@@ -19,11 +19,13 @@ const uploadMiddleware = upload.array("files");
 // 定义允许的文件类型列表
 const allowedFileTypes = [
   // 原有的文件类型
-  'image/jpeg',
-  'image/png',
-  'audio/mpeg',
+  "image/jpeg",
+  "image/png",
+  "audio/mpeg",
   // 新增 .json 对应的 MIME 类型
-  'application/json' 
+  "application/json",
+  // 新增 .xml 对应的 MIME 类型
+  "text/xml",
 ];
 
 export const config = {
@@ -61,7 +63,7 @@ export default async function handler(
       for (const file of files) {
         // 检查文件类型
         if (!allowedFileTypes.includes(file.mimetype)) {
-          return res.status(400).json({ error: '不支持的文件类型' });
+          return res.status(400).json({ error: "不支持的文件类型" });
         }
 
         const filePath = file.path;
