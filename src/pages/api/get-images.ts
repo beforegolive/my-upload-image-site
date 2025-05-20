@@ -91,6 +91,9 @@ export default async function handler(
           });
         });
 
+        const response = await fetch(url, { method: "HEAD" }); // 发送 HEAD 请求，只获取响应头
+        const mimeType = response.headers.get("Content-Type") || "";
+
         let width = 0;
         let height = 0;
         if (
@@ -119,6 +122,7 @@ export default async function handler(
           uploadTime: item.LastModified,
           width,
           height,
+          mimeType,
         };
       })
     );

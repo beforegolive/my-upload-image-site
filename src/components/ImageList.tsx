@@ -43,7 +43,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {images.map(({ url, size, Key, uploadTime, width, height }, index) => {
+      {images.map(({ url, size, Key, uploadTime, width, height, mimeType }, index) => {
         let fileName = "";
         let fileExtension = "";
         if (Key && typeof Key === "string" && Key.length > 0) {
@@ -54,7 +54,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
         const localUploadTime = new Date(uploadTime).toLocaleString();
         const isJson = fileExtension.toLowerCase() === "json";
         const isMp3 = fileExtension.toLowerCase() === "mp3";
-        const isXml = fileExtension.toLowerCase() === "xml"; // 判断是否为 xml 文件
+        const isXml = fileExtension.toLowerCase() === "xml";
         const displayIcon = isJson
           ? jsonIcon
           : isMp3
@@ -66,7 +66,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
           isJson || isMp3 || isXml
             ? fileExtension
             : `${fileExtension} (${width}x${height})`;
-
+      
         return (
           <div key={index} className="flex bg-white p-4 rounded shadow">
             <img
@@ -78,7 +78,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
             />
             <div className="flex flex-col justify-center text-black">
               <p>文件名: {fileName}</p>
-              <p>文件后缀: {fileExtensionWithDimensions}</p>
+              <p>文件后缀: {fileExtensionWithDimensions} ({mimeType})</p>
               <p>文件大小: {sizeInKb} KB</p>
               <p>上传时间: {localUploadTime}</p>
             </div>
