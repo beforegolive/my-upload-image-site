@@ -3,18 +3,8 @@ import DirectoryUploadButton from "./DirectoryUploadButton";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
 import { maxLoadingToastDurationMs } from "@/constants";
-
-// 新增复用函数
-export const confirmPngUpload = (files: File[]) => {
-  const hasPng = files.some(file => file.name.toLowerCase().endsWith('.png'));
-  if (hasPng) {
-    const confirmUpload = window.confirm('检测到上传文件中包含 PNG 图片，是否继续上传？');
-    if (!confirmUpload) {
-      return false;
-    }
-  }
-  return true;
-};
+import PngUploadConfirmDialog from "./PngUploadConfirmDialog";
+import "antd/dist/reset.css";
 
 const UploadButton: React.FC<{
   setUploadedImages: (images: Image[]) => void;
@@ -22,6 +12,24 @@ const UploadButton: React.FC<{
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isCompressionEnabled, setIsCompressionEnabled] = useState(true);
+  const [showPngDialog, setShowPngDialog] = useState(false);
+  const [pngFiles, setPngFiles] = useState<File[]>([]);
+  let pendingResolve: ((value: boolean) => void) | null = null;
+
+  // 新增复用函数
+  const confirmPngUpload = async (files: File[]) => {
+    const pngFiles = files.filter((file) =>
+      file.name.toLowerCase().endsWith(".png")
+    );
+    if (pngFiles.length > 0) {
+      return new Promise<boolean>((resolve) => {
+        pendingResolve = resolve;
+        setShowPngDialog(true);
+        setPngFiles(pngFiles);
+      });
+    }
+    return true;
+  };
 
   const handleUpload = async (files: File[]) => {
     const uploadToastKey = enqueueSnackbar("正在上传文件，请稍候...", {
@@ -59,13 +67,29 @@ const UploadButton: React.FC<{
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      if (!confirmPngUpload(files)) {
-        return;
+      const shouldUpload = await confirmPngUpload(files);
+      if (shouldUpload) {
+        handleUpload(files);
       }
-      handleUpload(files);
+    }
+  };
+
+  const handleDialogConfirm = () => {
+    setShowPngDialog(false);
+    if (pendingResolve) {
+      pendingResolve(true);
+      pendingResolve = null;
+    }
+  };
+
+  const handleDialogCancel = () => {
+    setShowPngDialog(false);
+    if (pendingResolve) {
+      pendingResolve(false);
+      pendingResolve = null;
     }
   };
 
@@ -101,6 +125,14 @@ const UploadButton: React.FC<{
         onChange={handleFileChange}
         style={{ display: "none" }}
       />
+      {showPngDialog && (
+        <PngUploadConfirmDialog
+          files={pngFiles}
+          onConfirm={handleDialogConfirm}
+          onCancel={handleDialogCancel}
+          open={showPngDialog}
+        />
+      )}
     </div>
   );
 };

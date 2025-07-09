@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Image } from "../types";
 import { useSnackbar } from "notistack";
 import { maxLoadingToastDurationMs } from "@/constants";
-import { confirmPngUpload } from "./UploadButton";
+// import { confirmPngUpload } from "./UploadButton";
 
 const DirectoryUploadButton: React.FC<{
   setUploadedImages: (images: Image[]) => void;
@@ -22,9 +22,9 @@ const DirectoryUploadButton: React.FC<{
     const input = e.target;
     if (input.files) {
       const files = Array.from(input.files);
-      if (!confirmPngUpload(files)) {
-        return;
-      }
+      // if (!confirmPngUpload(files)) {
+      //   return;
+      // }
       console.log("开始上传，尝试显示 toast");
       const uploadToastKey = enqueueSnackbar("正在上传图片，请稍候...", {
         variant: "info",

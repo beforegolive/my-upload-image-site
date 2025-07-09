@@ -10,6 +10,8 @@
     "zip": "./next_zip_v2.sh"
   },
   "dependencies": {
+    "@ant-design/cssinjs": "^1.23.0",
+    "antd": "^5.26.4",
     "cookie": "^1.0.2",
     "cos-nodejs-sdk-v5": "^2.13.1",
     "jotai": "^2.12.2",
