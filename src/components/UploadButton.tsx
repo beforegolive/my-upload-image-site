@@ -77,7 +77,8 @@ const UploadButton: React.FC<{
     }
   };
 
-  const handleDialogConfirm = () => {
+  const handleDialogConfirm = (selectedFile: File[]) => {
+    console.log("=== selectedFile", selectedFile);
     setShowPngDialog(false);
     if (pendingResolve) {
       pendingResolve(true);
