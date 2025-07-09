@@ -19,17 +19,18 @@
 // }
 
 import React from "react";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, App } from "antd";
 import type { AppProps } from "next/app";
 import "@/styles/globals.css";
 // import { SnackbarProvider } from "notistack";
 
 // import theme from "./theme/themeConfig";
 
-const App = ({ Component, pageProps }: AppProps) => (
+const MyApp = ({ Component, pageProps }: AppProps) => (
   // <ConfigProvider theme={theme}>
   <ConfigProvider>
-    {/* <SnackbarProvider
+    <App>
+      {/* <SnackbarProvider
       maxSnack={3}
       anchorOrigin={{
         vertical: "top", // 垂直方向：顶部
@@ -37,9 +38,10 @@ const App = ({ Component, pageProps }: AppProps) => (
       }}
       autoHideDuration={2000} // 设置默认显示时间为 50000 毫秒（即 50 秒）
     > */}
-    <Component {...pageProps} />
+      <Component {...pageProps} />
+    </App>
     {/* </SnackbarProvider> */}
   </ConfigProvider>
 );
 
-export default App;
+export default MyApp;

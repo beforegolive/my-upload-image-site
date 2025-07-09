@@ -1,50 +1,63 @@
 import React, { useRef, useState } from "react";
+// import DirectoryUploadButton from "./DirectoryUploadButton";
+// import { Image } from "../types";
+import { App } from "antd";
+import PngUploadConfirmModal from "./PngUploadConfirmDialog";
 import DirectoryUploadButton from "./DirectoryUploadButton";
-import { Image } from "../types";
-import { useSnackbar } from "notistack";
-import { maxLoadingToastDurationMs } from "@/constants";
-import PngUploadConfirmDialog from "./PngUploadConfirmDialog";
-import "antd/dist/reset.css";
+// import { isEmpty } from "@/utils";
+
+const maxLoadingToastDurationMs = 5000;
+
+export interface IUploadedResult {
+  uploadedFiles: any[];
+}
 
 const UploadButton: React.FC<{
-  setUploadedImages: (images: Image[]) => void;
+  setUploadedImages: (images: any[]) => void;
 }> = ({ setUploadedImages }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
   const [isCompressionEnabled, setIsCompressionEnabled] = useState(true);
-  const [showPngDialog, setShowPngDialog] = useState(false);
-  const [pngFiles, setPngFiles] = useState<File[]>([]);
-  let pendingResolve: ((value: boolean) => void) | null = null;
+  const [showPngModal, setShowPngModal] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
-  // 新增复用函数
-  const confirmPngUpload = async (files: File[]) => {
-    const pngFiles = files.filter((file) =>
-      file.name.toLowerCase().endsWith(".png")
+  const { message } = App.useApp();
+
+  // const handleUploadCore = async (files: File[]) =>{
+
+  // }
+  // 文件上传核心逻辑，单文件和多文件复用。
+  const handleUploadCore = async (files: File[]): Promise<IUploadedResult> => {
+    console.log("== ");
+    const loadingInstance = message.loading(
+      "正在上传文件，请稍候...",
+      maxLoadingToastDurationMs / 1000
     );
-    if (pngFiles.length > 0) {
-      return new Promise<boolean>((resolve) => {
-        pendingResolve = resolve;
-        setShowPngDialog(true);
-        setPngFiles(pngFiles);
-      });
-    }
-    return true;
-  };
-
-  const handleUpload = async (files: File[]) => {
-    const uploadToastKey = enqueueSnackbar("正在上传文件，请稍候...", {
-      variant: "info",
-      preventDuplicate: true,
-      autoHideDuration: maxLoadingToastDurationMs,
-    });
 
     const randomFactor = new Date().getTime().toString();
     const formData = new FormData();
     formData.append("compress", isCompressionEnabled ? "true" : "false");
-    files.forEach((file) => {
+
+    const validFiles = Array.from(files).filter(
+      (file) => !file.name.startsWith(".")
+    );
+
+    validFiles.forEach((file) => {
       formData.append("files", file);
     });
     formData.append("randomFactor", randomFactor);
+
+    let predefinedNames = [];
+    // @ts-ignore
+    if (files.some((item) => !isEmpty(item.preDefinedName))) {
+      // @ts-ignore
+      predefinedNames = files.map((item) => item.preDefinedName);
+    }
+    const hasPredefinedNames = predefinedNames.length > 0;
+
+    if (hasPredefinedNames) {
+      formData.append("preDefinedNames", randomFactor);
+    }
 
     try {
       const response = await fetch("/api/upload", {
@@ -54,44 +67,67 @@ const UploadButton: React.FC<{
       const data = await response.json();
       if (response.ok) {
         setUploadedImages(data.imageUrls);
-        enqueueSnackbar("文件上传成功", { variant: "success" });
+        message.success("文件上传成功");
+        return { uploadedFiles: data.imageUrls };
       } else {
         console.error("上传失败:", data.error);
-        enqueueSnackbar("文件上传失败，请稍后重试", { variant: "error" });
+        message.error("文件上传失败，请稍后重试");
+
+        return { uploadedFiles: [] };
       }
     } catch (error) {
       console.error("上传出错:", error);
-      enqueueSnackbar("文件上传出错，请稍后重试", { variant: "error" });
+      message.error("文件上传出错，请稍后重试");
+      return { uploadedFiles: [] };
     } finally {
-      closeSnackbar(uploadToastKey);
+      loadingInstance();
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      const shouldUpload = await confirmPngUpload(files);
-      if (shouldUpload) {
-        handleUpload(files);
-      }
+      return handleUploadWithSpriteCheck(files);
+      // const passAndGoUpload = await beforeUploadCheck(files);
+
+      // if (passAndGoUpload) {
+      //   handleUploadCore(files);
+      // }
+    }
+  };
+  const handleUploadWithSpriteCheck = async (
+    files: File[],
+    skipCheck = false
+  ) => {
+    if (skipCheck) {
+      return handleUploadCore(files);
+    }
+
+    const passAndGoUpload = await beforeUploadCheck(files);
+
+    if (passAndGoUpload) {
+      return handleUploadCore(files);
     }
   };
 
-  const handleDialogConfirm = (selectedFile: File[]) => {
-    console.log("=== selectedFile", selectedFile);
-    setShowPngDialog(false);
-    if (pendingResolve) {
-      pendingResolve(true);
-      pendingResolve = null;
+  /** 检查是否有png图片，如果有则弹窗确认，之后才正式上传 */
+  const beforeUploadCheck = (files: File[]) => {
+    const hasPng = files.some((file) =>
+      file.name.toLowerCase().endsWith(".png")
+    );
+    if (hasPng) {
+      setPendingFiles(files);
+      setShowPngModal(true);
+      return Promise.resolve(false);
+    } else {
+      // handleUpload(files);
+      return Promise.resolve(true);
     }
   };
 
-  const handleDialogCancel = () => {
-    setShowPngDialog(false);
-    if (pendingResolve) {
-      pendingResolve(false);
-      pendingResolve = null;
-    }
+  const handleCancelPngUpload = () => {
+    setShowPngModal(false);
+    setPendingFiles([]);
   };
 
   const handleClick = () => {
@@ -99,42 +135,38 @@ const UploadButton: React.FC<{
   };
 
   return (
-    <div className="flex items-center space-x-4">
-      <button
-        onClick={handleClick}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        单一文件上传
-      </button>
-      <DirectoryUploadButton setUploadedImages={setUploadedImages} />
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="compressCheckbox"
-          checked={isCompressionEnabled}
-          onChange={(e) => setIsCompressionEnabled(e.target.checked)}
+    <>
+      <div className="flex items-center space-x-4">
+        <button
+          onClick={handleClick}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          单一文件上传
+        </button>
+        <DirectoryUploadButton
+          // setUploadedImages={setUploadedImages}
+          // onBeforeUpload={async () => true}
+          handleUploadWithSpriteCheck={handleUploadWithSpriteCheck}
         />
-        <label htmlFor="compressCheckbox" className="ml-2">
-          启用图片压缩
-        </label>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          // 添加 application/xml 支持 xml 文件上传
+          accept="image/jpeg, image/png, audio/mpeg, application/json, application/xml"
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
       </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        // 添加 application/xml 支持 xml 文件上传
-        accept="image/jpeg, image/png, audio/mpeg, application/json, application/xml"
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
-      {showPngDialog && (
-        <PngUploadConfirmDialog
-          files={pngFiles}
-          onConfirm={handleDialogConfirm}
-          onCancel={handleDialogCancel}
-          open={showPngDialog}
+      {showPngModal && (
+        <PngUploadConfirmModal
+          files={pendingFiles}
+          open={showPngModal}
+          uploadHandler={handleUploadCore}
+          onClose={handleCancelPngUpload}
         />
       )}
-    </div>
+    </>
   );
 };
 
