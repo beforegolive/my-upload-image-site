@@ -283,7 +283,7 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
         selectedRowKeys.includes(item.key)
       )
 
-      const mappedSpriteFiles = selectedFulSpriteFilesInfo.map((item) => {
+      const mappedSpriteFiles = selectedFulSpriteFilesInfo.map((item: any) => {
         const uploadedFile = uploadedFiles.find((file: any) => file.originalName === item.name)
 
         console.log('==** uploadedFiles', uploadedFiles)
