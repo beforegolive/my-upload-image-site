@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Modal, Table } from 'antd'
+import { Button, message, Modal, Table } from 'antd'
 import { IUploadedResult } from './UploadButton'
 import { extractFirstFrameEdges, simplifyVerticesV2 } from '@/utils/webCanvasTool'
 import { calculateSpriteFrames } from '@/utils'
@@ -35,7 +35,7 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
   const initialSelectedRowKeys: any[] = []
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>(initialSelectedRowKeys)
 
-  const [spriteInfoFiles, setSpriteInfoFiles] = useState<any[]>([])
+  // const [spriteInfoFiles, setSpriteInfoFiles] = useState<any[]>([])
   const [previewImage, setPreviewImage] = useState<any>()
   const [previewImageName, setPreviewImageName] = useState<string>('')
   const [previewVisible, setPreviewVisible] = useState<boolean>(false)
@@ -58,6 +58,12 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
           alt={record.file.name}
           style={{ width: 50, height: 50, objectFit: 'cover' }}
           onClick={() => {
+            const { name } = record
+            if (!name.toLocaleLowerCase().endsWith('.png')) {
+              message.info('仅png图片支持预览')
+              return
+            }
+
             setPreviewImage(URL.createObjectURL(record.file))
             setPreviewImageName(record.file.name)
             setPreviewVisible(true)
@@ -122,7 +128,7 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
   const rowSelection = {
     selectedRowKeys,
     onChange: async (selectedKeys: React.Key[]) => {
-      const clonedSpriteInfoFiles = [...spriteInfoFiles]
+      const clonedSpriteInfoFiles = [...tableDataSource]
       for (let selectedKey of selectedKeys) {
         const foundSpriteFile = clonedSpriteInfoFiles.find((spriteFile: any) => {
           return spriteFile.name === selectedKey
@@ -134,7 +140,8 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
         }
       }
 
-      setSpriteInfoFiles(clonedSpriteInfoFiles)
+      // setSpriteInfoFiles(clonedSpriteInfoFiles)
+      setTableDataSource
       setSelectedRowKeys(selectedKeys)
     },
   }
@@ -272,7 +279,7 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
 
     // 如果有图片选中，则继续上传对应的json文件
     if (selectedRowKeys.length > 0) {
-      const selectedFulSpriteFilesInfo = spriteInfoFiles.filter((item: any) =>
+      const selectedFulSpriteFilesInfo = tableDataSource.filter((item: any) =>
         selectedRowKeys.includes(item.key)
       )
 
@@ -334,18 +341,20 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
           item.jsonSnippetObj = extractedJsonObj?.jsonSnippetObj
         }
 
-        setSpriteInfoFiles(mappedFiles)
+        setTableDataSource(mappedFiles)
 
-        const clonedDataSource = [...dataSource]
-        mappedFiles.forEach((item) => {
-          const dataSorceItem = clonedDataSource.find((sourceItem) => sourceItem.key === item.key)
-          if (dataSorceItem) {
-            dataSorceItem.jsonFile = item.jsonFile
-            dataSorceItem.jsonSnippetObj = item.jsonSnippetObj
-          }
-        })
+        // setSpriteInfoFiles(mappedFiles)
 
-        setTableDataSource(clonedDataSource)
+        // const clonedDataSource = [...dataSource]
+        // mappedFiles.forEach((item) => {
+        //   const dataSorceItem = clonedDataSource.find((sourceItem) => sourceItem.key === item.key)
+        //   if (dataSorceItem) {
+        //     dataSorceItem.jsonFile = item.jsonFile
+        //     dataSorceItem.jsonSnippetObj = item.jsonSnippetObj
+        //   }
+        // })
+
+        // setTableDataSource(clonedDataSource)
 
         const detectedSpriteFile = mappedFiles.filter((item: any) => item.jsonFile)
 
@@ -397,13 +406,13 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
             type: 'application/json',
           })
 
-          setSpriteInfoFiles((prev) =>
-            prev.map((item) =>
-              item.key === currentFileKey
-                ? { ...item, jsonFile: newJsonFile, jsonSnippetObj: jsonSnippetObj }
-                : item
-            )
-          )
+          // setSpriteInfoFiles((prev) =>
+          //   prev.map((item) =>
+          //     item.key === currentFileKey
+          //       ? { ...item, jsonFile: newJsonFile, jsonSnippetObj: jsonSnippetObj }
+          //       : item
+          //   )
+          // )
 
           setTableDataSource((prev: any) => {
             return prev.map((item: any) =>

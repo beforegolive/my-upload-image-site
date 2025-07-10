@@ -1,11 +1,11 @@
-import React from "react";
-import { Modal } from "antd";
+import React from 'react'
+import { Modal } from 'antd'
 
 interface ImgPreviewModalProps {
-  previewImage: string;
-  open: boolean;
-  previewImageName: string;
-  onCancel: () => void;
+  previewImage: string
+  open: boolean
+  previewImageName: string
+  onCancel: () => void
 }
 
 const ImgPreviewModal: React.FC<ImgPreviewModalProps> = ({
@@ -21,14 +21,15 @@ const ImgPreviewModal: React.FC<ImgPreviewModalProps> = ({
       footer={null}
       onCancel={onCancel}
       // style={{ padding: "30px" }}
+      width={'50vw'}
     >
       <img
         src={previewImage}
         alt="预览"
-        style={{ width: "100%", marginTop: "20px", marginBottom: "10px" }}
+        style={{ width: '100%', marginTop: '20px', marginBottom: '10px' }}
       />
     </Modal>
-  );
-};
+  )
+}
 
-export default ImgPreviewModal;
+export default ImgPreviewModal
