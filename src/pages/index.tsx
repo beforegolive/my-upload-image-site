@@ -1,6 +1,6 @@
 // src/pages/index.tsx
 import React, { useState, useEffect } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { uploadedImagesAtom } from "../atoms";
 import ImageList from "../components/ImageList";
 import UploadButton from "../components/UploadButton";
@@ -23,7 +23,12 @@ const HomePage: React.FC = () => {
   // const [loadingMessage, setLoadingMessage] = useState<any>(null);
 
   const fillImagesAtStart = (imgs: any[]) => {
-    setUploadedImages([...imgs, ...uploadedImages]);
+    // const latestImgs = useAtomValue(uploadedImagesAtom);
+    // setUploadedImages([...imgs, ...uploadedImages]);
+
+    setUploadedImages((prev) => {
+      return [...imgs, ...prev];
+    });
   };
 
   const fetchHistoryImages = async () => {

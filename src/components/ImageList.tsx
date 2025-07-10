@@ -8,6 +8,7 @@ import mp3Icon from "@/assets/imgs/mp3_icon.jpeg";
 import xmlIcon from "@/assets/imgs/xml_icon.png"; // 假设图标路径是这样，根据实际情况调整
 import { replaceDomain } from "@/utils";
 import { App } from "antd";
+import copy from "copy-to-clipboard";
 
 interface ImageListProps {
   images: Image[];
@@ -33,9 +34,9 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
     setSelectedImage(null);
   };
 
-  const handleCopyUrl = async (url: string) => {
+  const handleCopyUrl = (url: string) => {
     try {
-      await navigator.clipboard.writeText(url);
+      copy(url);
       message.success("URL 复制成功");
       // enqueueSnackbar("URL 复制成功", { variant: "success" });
       setDisabledButtons((prev) => ({ ...prev, [url]: true }));
