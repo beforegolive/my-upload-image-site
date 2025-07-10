@@ -5,6 +5,7 @@ import sharp from "sharp";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import { isEmpty } from "@/utils";
 
 const cos = new COS({
   SecretId: process.env.NEXT_PUBLIC_TENCENT_CLOUD_SECRET_ID,
@@ -89,14 +90,14 @@ export default async function handler(
     const bucket = process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "";
     const region = process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "";
     const compress = req.body.compress === "true";
-
+    const preDefinedNames = req.body.preDefinedNames?.split("|") || [];
     const uploadedImages = [];
 
     // @ts-expect-error 类型不匹配
     if (req.files) {
       // @ts-expect-error 类型不匹配
       const files = req.files as Express.Multer.File[];
-      for (const file of files) {
+      for (const [index, file] of files.entries()) {
         // 检查文件类型
         if (!allowedFileTypes.includes(file.mimetype)) {
           return res.status(400).json({ error: "不支持的文件类型" });
@@ -136,7 +137,10 @@ export default async function handler(
 
         const originalMimeType = getMimeType(file?.originalname);
 
-        const key = `uploads/${Date.now()}-${file.originalname}`;
+        const curPreDefinedName = preDefinedNames[index];
+        const key = isEmpty(curPreDefinedName)
+          ? `uploads/${Date.now()}-${file.originalname}`
+          : curPreDefinedName;
         const putObjectParams = {
           Bucket: bucket,
           Region: region,
@@ -175,6 +179,7 @@ export default async function handler(
           url,
           size,
           Key: key,
+          originalName: file.originalname,
           uploadTime: new Date().toISOString(),
           width,
           height,

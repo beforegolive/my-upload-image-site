@@ -2,11 +2,12 @@
 import React, { useState } from "react";
 import ImagePreviewModal from "./ImagePreviewModal";
 import { Image } from "../types";
-import { useSnackbar } from "notistack";
+// import { useSnackbar } from "notistack";
 import jsonIcon from "@/assets/imgs/json_icon.png";
 import mp3Icon from "@/assets/imgs/mp3_icon.jpeg";
 import xmlIcon from "@/assets/imgs/xml_icon.png"; // 假设图标路径是这样，根据实际情况调整
 import { replaceDomain } from "@/utils";
+import { App } from "antd";
 
 interface ImageListProps {
   images: Image[];
@@ -18,7 +19,10 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
   const [disabledButtons, setDisabledButtons] = useState<{
     [key: string]: boolean;
   }>({});
-  const { enqueueSnackbar } = useSnackbar();
+
+  const { message } = App.useApp();
+
+  // const { enqueueSnackbar } = useSnackbar();
 
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
@@ -32,13 +36,15 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
   const handleCopyUrl = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
-      enqueueSnackbar("URL 复制成功", { variant: "success" });
+      message.success("URL 复制成功");
+      // enqueueSnackbar("URL 复制成功", { variant: "success" });
       setDisabledButtons((prev) => ({ ...prev, [url]: true }));
       setTimeout(() => {
         setDisabledButtons((prev) => ({ ...prev, [url]: false }));
       }, 2000);
     } catch {
-      enqueueSnackbar("URL 复制失败", { variant: "error" });
+      // enqueueSnackbar("URL 复制失败", { variant: "error" });
+      message.success("URL 复制失败");
     }
   };
 

@@ -217,25 +217,39 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
     // 第2步：提取选中的png图片，将信息保存到json元文件中
     // 第3步：获取上传后文件的url地址和选中png元文件做个映射，再上传（元文件url和图片地址匹配，仅后缀不同）
     const { uploadedFiles } = await uploadHandler(files);
-    const selectedFulSpriteFilesInfo = spriteInfoFiles.filter((item: any) =>
-      selectedRowKeys.includes(item.key)
-    );
 
-    const mappedSpriteFiles = selectedFulSpriteFilesInfo.map((item) => {
-      const uploadedFile = uploadedFiles.find(
-        (file: any) => file.originalName === item.name
+    // 如果有图片选中，则继续上传对应的json文件
+    if (selectedRowKeys.length > 0) {
+      const selectedFulSpriteFilesInfo = spriteInfoFiles.filter((item: any) =>
+        selectedRowKeys.includes(item.key)
       );
 
-      const urlObj = new URL(uploadedFile.url);
-      const preDefinedName = urlObj.pathname.replace(".png", ".json");
+      const mappedSpriteFiles = selectedFulSpriteFilesInfo.map((item) => {
+        const uploadedFile = uploadedFiles.find(
+          (file: any) => file.originalName === item.name
+        );
 
-      if (item.jsonFile) {
-        item.jsonFile.preDefinedName = preDefinedName;
-      }
-      return item.jsonFile;
-    });
+        console.log("==** uploadedFiles", uploadedFiles);
+        console.log("==** uploadedFile", uploadedFile);
 
-    await uploadHandler(mappedSpriteFiles);
+        const urlObj = new URL(uploadedFile.url);
+        const preDefinedName = urlObj.pathname.replace(".png", ".json");
+
+        console.log("==** preDefinedName", preDefinedName);
+        if (item.jsonFile) {
+          item.jsonFile.preDefinedName = preDefinedName;
+        }
+        return item.jsonFile;
+      });
+
+      console.log("==** mappedSpriteFiles", mappedSpriteFiles);
+
+      await uploadHandler(mappedSpriteFiles);
+
+      // return;
+    }
+
+    onClose();
 
     // { url, originalName } = uploadedFiles;
 

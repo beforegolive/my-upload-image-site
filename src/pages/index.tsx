@@ -7,33 +7,33 @@ import UploadButton from "../components/UploadButton";
 import Pagination from "../components/Pagination";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import { useSnackbar } from "notistack";
+import { App } from "antd";
 import { maxLoadingToastDurationMs } from "@/constants";
 
 const defaultSnackBarKey = "";
 const HomePage: React.FC = () => {
   const router = useRouter();
   // const adminToken = searchParams.get("token") || "";
-
+  const { message } = App.useApp();
   const [uploadedImages, setUploadedImages] = useAtom(uploadedImagesAtom);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const [totalPages, setTotalPages] = useState(0);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const [loadingSnackbarKey, setLoadingSnackbarKey] = useState<string | number>(
-    defaultSnackBarKey
-  );
+  // const [loadingMessage, setLoadingMessage] = useState<any>(null);
+
+  const fillImagesAtStart = (imgs: any[]) => {
+    setUploadedImages([...imgs, ...uploadedImages]);
+  };
 
   const fetchHistoryImages = async () => {
     setLoadingHistory(true);
-    const key = enqueueSnackbar("加载图片中...", {
-      variant: "info",
-      autoHideDuration: maxLoadingToastDurationMs,
-      // maxLoadingToastDurationMs
-    });
-
-    setLoadingSnackbarKey(key);
+    // setLoadingMessage(
+    const hideMsg = message.loading(
+      "加载图片中...",
+      maxLoadingToastDurationMs / 1000
+    );
+    // );
 
     try {
       const response = await fetch(
@@ -46,13 +46,17 @@ const HomePage: React.FC = () => {
         setTotalPages(Math.ceil(data.totalCount / itemsPerPage));
       } else {
         console.error("获取历史图片失败:", data.error);
-        enqueueSnackbar("获取历史图片失败，请稍后重试", { variant: "error" });
+        message.error("获取历史图片失败，请稍后重试");
       }
     } catch (error) {
       console.error("获取历史图片出错:", error);
-      enqueueSnackbar("获取历史图片出错，请稍后重试", { variant: "error" });
+      message.error("获取历史图片出错，请稍后重试");
     } finally {
       setLoadingHistory(false);
+      hideMsg();
+      // if (loadingMessage) {
+      //   loadingMessage();
+      // }
     }
   };
 
@@ -70,15 +74,15 @@ const HomePage: React.FC = () => {
     }
 
     fetchHistoryImages();
-  }, [currentPage, enqueueSnackbar]);
+  }, [currentPage]);
 
-  // 监听 loadingSnackbarKey 的变化，当 loadingHistory 为 false 时关闭 snackbar
-  useEffect(() => {
-    if (!loadingHistory && loadingSnackbarKey) {
-      closeSnackbar(loadingSnackbarKey);
-      setLoadingSnackbarKey(defaultSnackBarKey); // 关闭后重置 key
-    }
-  }, [loadingHistory, loadingSnackbarKey, closeSnackbar]);
+  // 监听 loadingHistory 的变化，当为 false 时关闭 loading 消息
+  // useEffect(() => {
+  //   if (!loadingHistory && loadingMessage) {
+  //     loadingMessage();
+  //     setLoadingMessage(null);
+  //   }
+  // }, [loadingHistory]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -95,7 +99,7 @@ const HomePage: React.FC = () => {
     <div className="p-8 relative">
       <h1
         onClick={handleTitleClick}
-        className="text-4xl font-bold mb-4 cursor-pointer"
+        className="text-4xl font-bold mb-4 cursor-pointer text-white"
       >
         文件上传站点
       </h1>
@@ -105,7 +109,7 @@ const HomePage: React.FC = () => {
       >
         退出登录
       </button>
-      <UploadButton setUploadedImages={setUploadedImages} />
+      <UploadButton setUploadedImages={fillImagesAtStart} />
       {/* 在图片列表上方添加分页组件，并添加边距 */}
       <div className="mt-4 mb-4">
         <Pagination

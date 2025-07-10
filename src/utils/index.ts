@@ -38,6 +38,22 @@ export function replaceDomain(
   }
 }
 
+export const isEmpty = (val: any) => {
+  if (val === null || val === undefined || val === "") {
+    return true;
+  }
+
+  if (Array.isArray(val) && val.length === 0) {
+    return true;
+  }
+
+  if (typeof val === "object" && Object.keys(val).length === 0) {
+    return true;
+  }
+
+  return false;
+};
+
 // // 示例用法
 // console.log(replaceDomain("https://example.com/path?query=1", "newdomain.com"));
 // // 输出: https://newdomain.com/path?query=1

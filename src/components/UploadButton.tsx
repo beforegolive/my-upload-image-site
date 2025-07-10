@@ -4,6 +4,7 @@ import React, { useRef, useState } from "react";
 import { App } from "antd";
 import PngUploadConfirmModal from "./PngUploadConfirmDialog";
 import DirectoryUploadButton from "./DirectoryUploadButton";
+import { isEmpty } from "@/utils";
 // import { isEmpty } from "@/utils";
 
 const maxLoadingToastDurationMs = 5000;
@@ -47,7 +48,7 @@ const UploadButton: React.FC<{
     });
     formData.append("randomFactor", randomFactor);
 
-    let predefinedNames = [];
+    let predefinedNames: string[] = [];
     // @ts-ignore
     if (files.some((item) => !isEmpty(item.preDefinedName))) {
       // @ts-ignore
@@ -56,7 +57,7 @@ const UploadButton: React.FC<{
     const hasPredefinedNames = predefinedNames.length > 0;
 
     if (hasPredefinedNames) {
-      formData.append("preDefinedNames", randomFactor);
+      formData.append("preDefinedNames", predefinedNames.join("|"));
     }
 
     try {
