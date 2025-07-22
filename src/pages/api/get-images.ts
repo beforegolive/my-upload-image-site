@@ -1,117 +1,114 @@
 // src/pages/api/get-images.ts
-import type { NextApiRequest, NextApiResponse } from "next";
-import COS from "cos-nodejs-sdk-v5";
-import sharp from "sharp";
+import type { NextApiRequest, NextApiResponse } from 'next'
+import COS from 'cos-nodejs-sdk-v5'
+import sharp from 'sharp'
 
 const cos = new COS({
   SecretId: process.env.NEXT_PUBLIC_TENCENT_CLOUD_SECRET_ID,
   SecretKey: process.env.NEXT_PUBLIC_TENCENT_CLOUD_SECRET_KEY,
-});
+})
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { page = 1, limit = 20 } = req.query;
-    const bucket = process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || "";
-    const region = process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || "";
+    const { page = 1, limit = 20 } = req.query
+    const bucket = process.env.NEXT_PUBLIC_TENCENT_CLOUD_BUCKET || ''
+    const region = process.env.NEXT_PUBLIC_TENCENT_CLOUD_REGION || ''
 
-    let marker = "";
+    let marker = ''
     if (parseInt(page as string, 10) > 1) {
-      const previousPage = parseInt(page as string, 10) - 1;
+      const previousPage = parseInt(page as string, 10) - 1
       const previousResult = await new Promise((resolve, reject) => {
         const previousParams = {
           Bucket: bucket,
           Region: region,
-          Prefix: "",
+          Prefix: '',
           MaxKeys: previousPage * parseInt(limit as string, 10),
-          Marker: "",
-        };
+          Marker: '',
+        }
         cos.getBucket(previousParams, (err, data) => {
           if (err) {
-            reject(err);
+            reject(err)
           } else {
-            resolve(data);
+            resolve(data)
           }
-        });
-      });
+        })
+      })
       const { Contents = [] } = previousResult as {
-        Contents: { Key: string; LastModified: string; Size: number }[];
-      };
+        Contents: { Key: string; LastModified: string; Size: number }[]
+      }
       if (Contents.length > 0) {
-        marker = Contents[Contents.length - 1].Key;
+        marker = Contents[Contents.length - 1].Key
       }
     }
 
     const listObjectsParams = {
       Bucket: bucket,
       Region: region,
-      Prefix: "",
+      // 默认获取 cos 中 uploads 目录下的文件
+      Prefix: 'uploads',
       MaxKeys: parseInt(limit as string, 10),
       Marker: marker,
-    };
+    }
 
     const result = await new Promise((resolve, reject) => {
       cos.getBucket(listObjectsParams, (err, data) => {
         if (err) {
-          reject(err);
+          reject(err)
         } else {
-          resolve(data);
+          resolve(data)
         }
-      });
-    });
+      })
+    })
 
     const { Contents = [] } = result as {
-      Contents: { Key: string; LastModified: string; Size: number }[];
-    };
+      Contents: { Key: string; LastModified: string; Size: number }[]
+    }
 
     const sortedContents = Contents.sort((a, b) => {
-      const dateA = new Date(a.LastModified);
-      const dateB = new Date(b.LastModified);
-      return dateB.getTime() - dateA.getTime();
-    });
+      const dateA = new Date(a.LastModified)
+      const dateB = new Date(b.LastModified)
+      return dateB.getTime() - dateA.getTime()
+    })
 
     const imageUrlsWithSize = await Promise.all(
       sortedContents.map(async (item) => {
-        const url = `https://${bucket}.cos.${region}.myqcloud.com/${item.Key}`;
+        const url = `https://${bucket}.cos-website.${region}.myqcloud.com/${item.Key}`
+
         // 获取图片的二进制数据
         const getObjectParams = {
           Bucket: bucket,
           Region: region,
           Key: item.Key,
-        };
+        }
         const imageData = await new Promise<Buffer>((resolve, reject) => {
           cos.getObject(getObjectParams, (err, data) => {
             if (err) {
-              reject(err);
+              reject(err)
             } else {
-              resolve(data.Body as Buffer);
+              resolve(data.Body as Buffer)
             }
-          });
-        });
+          })
+        })
 
-        const response = await fetch(url, { method: "HEAD" }); // 发送 HEAD 请求，只获取响应头
-        const mimeType = response.headers.get("Content-Type") || "";
+        const response = await fetch(url, { method: 'HEAD' }) // 发送 HEAD 请求，只获取响应头
+        const mimeType = response.headers.get('Content-Type') || ''
 
-        let width = 0;
-        let height = 0;
+        let width = 0
+        let height = 0
         if (
-          item.Key.endsWith(".png") ||
-          item.Key.endsWith(".jpg") ||
-          item.Key.endsWith(".jpeg") ||
-          item.Key.endsWith(".webp") ||
-          item.Key.endsWith(".gif")
+          item.Key.endsWith('.png') ||
+          item.Key.endsWith('.jpg') ||
+          item.Key.endsWith('.jpeg') ||
+          item.Key.endsWith('.webp') ||
+          item.Key.endsWith('.gif')
         ) {
           try {
             // 读取图片宽高信息
-            const metadata = await sharp(imageData).metadata();
-            width = metadata.width || 0;
-            height = metadata.height || 0;
+            const metadata = await sharp(imageData).metadata()
+            width = metadata.width || 0
+            height = metadata.height || 0
           } catch (error) {
-            console.warn(
-              `文件 ${item.Key} 不是有效的图片格式，跳过读取宽高信息。error: ${error}`
-            );
+            console.warn(`文件 ${item.Key} 不是有效的图片格式，跳过读取宽高信息。error: ${error}`)
           }
         }
 
@@ -123,31 +120,31 @@ export default async function handler(
           width,
           height,
           mimeType,
-        };
+        }
       })
-    );
+    )
 
     const totalCountResult = await new Promise((resolve, reject) => {
       const totalCountParams = {
         Bucket: bucket,
         Region: region,
-        Prefix: "",
-      };
+        Prefix: '',
+      }
       cos.getBucket(totalCountParams, (err, data) => {
         if (err) {
-          reject(err);
+          reject(err)
         } else {
-          resolve(data.Contents.length);
+          resolve(data.Contents.length)
         }
-      });
-    });
+      })
+    })
 
     res.status(200).json({
       imageUrls: imageUrlsWithSize,
       totalCount: totalCountResult as number,
-    });
+    })
   } catch (error) {
-    console.error("获取图片列表出错:", error);
-    res.status(500).json({ error: "获取图片列表出错" });
+    console.error('获取图片列表出错:', error)
+    res.status(500).json({ error: '获取图片列表出错' })
   }
 }
