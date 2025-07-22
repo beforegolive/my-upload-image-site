@@ -6,6 +6,7 @@ import { calculateSpriteFrames } from '@/utils'
 import { Vertices } from 'matter-js'
 import ImgPreviewModal from './ImgPreviewModal'
 import JsonEditorModal from './JsonEditorModal'
+import BPMDetective from '@/utils/bpmDetective'
 
 interface IConfirmPngUploadProps {
   files: File[]
@@ -152,6 +153,32 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
     for (let propName of subProps) {
       result[propName] = jsonObj[propName]
     }
+
+    return result
+  }
+
+  async function analyzeAudio(audioBuffer: AudioBuffer) {
+    // 创建检测器实例，可传入自定义参数
+    const detective = new BPMDetective(audioBuffer, {
+      beatsPerBar: 4, // 4/4拍
+      strongBeatThreshold: 1.2, // 强拍阈值
+      timePrecision: 2, // 时间精度（两位小数）
+    })
+
+    // 执行分析
+    const result = await detective.detect()
+
+    // 打印结果
+    console.log(`BPM: ${result.bpm}`)
+    console.log(`置信度: ${result.confidence.toFixed(2)}`)
+    console.log(`总节拍数: ${result.beats.length}`)
+    console.log(`小节数: ${result.barCount}`)
+
+    // 输出每个节拍的信息
+    result.beats.forEach((beat) => {
+      const type = beat.isStrong ? '强拍' : '弱拍'
+      console.log(`节拍 #${beat.index} (${type}): ${beat.time}s`)
+    })
 
     return result
   }
