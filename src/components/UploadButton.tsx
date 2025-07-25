@@ -1,139 +1,126 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState } from 'react'
 // import DirectoryUploadButton from "./DirectoryUploadButton";
 // import { Image } from "../types";
-import { App } from "antd";
-import PngUploadConfirmModal from "./PngUploadConfirmDialog";
-import DirectoryUploadButton from "./DirectoryUploadButton";
-import { isEmpty } from "@/utils";
+import { App } from 'antd'
+import PngUploadConfirmModal from './PngUploadConfirmDialog'
+import DirectoryUploadButton from './DirectoryUploadButton'
+import { isEmpty } from '@/utils'
+import { specialFileExts } from '@/constants'
 // import { isEmpty } from "@/utils";
 
-const maxLoadingToastDurationMs = 5000;
+const maxLoadingToastDurationMs = 5000
 
 export interface IUploadedResult {
-  uploadedFiles: any[];
+  uploadedFiles: any[]
 }
 
 const UploadButton: React.FC<{
-  setUploadedImages: (images: any[]) => void;
+  setUploadedImages: (images: any[]) => void
 }> = ({ setUploadedImages }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [isCompressionEnabled, setIsCompressionEnabled] = useState(true);
-  const [showPngModal, setShowPngModal] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [isCompressionEnabled, setIsCompressionEnabled] = useState(true)
+  const [showPngModal, setShowPngModal] = useState(false)
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
 
-  const { message } = App.useApp();
-
-  // const handleUploadCore = async (files: File[]) =>{
-
-  // }
+  const { message } = App.useApp()
   // 文件上传核心逻辑，单文件和多文件复用。
   const handleUploadCore = async (files: File[]): Promise<IUploadedResult> => {
-    console.log("== ");
+    console.log('== ')
     const loadingInstance = message.loading(
-      "正在上传文件，请稍候...",
+      '正在上传文件，请稍候...',
       maxLoadingToastDurationMs / 1000
-    );
+    )
 
-    const randomFactor = new Date().getTime().toString();
-    const formData = new FormData();
-    formData.append("compress", isCompressionEnabled ? "true" : "false");
+    const randomFactor = new Date().getTime().toString()
+    const formData = new FormData()
+    formData.append('compress', isCompressionEnabled ? 'true' : 'false')
 
-    const validFiles = Array.from(files).filter(
-      (file) => !file.name.startsWith(".")
-    );
+    const validFiles = Array.from(files).filter((file) => !file.name.startsWith('.'))
 
     validFiles.forEach((file) => {
-      formData.append("files", file);
-    });
-    formData.append("randomFactor", randomFactor);
+      formData.append('files', file)
+    })
+    formData.append('randomFactor', randomFactor)
 
-    let predefinedNames: string[] = [];
+    let predefinedNames: string[] = []
     // @ts-ignore
     if (files.some((item) => !isEmpty(item.preDefinedName))) {
       // @ts-ignore
-      predefinedNames = files.map((item) => item.preDefinedName);
+      predefinedNames = files.map((item) => item.preDefinedName)
     }
-    const hasPredefinedNames = predefinedNames.length > 0;
+    const hasPredefinedNames = predefinedNames.length > 0
 
     if (hasPredefinedNames) {
-      formData.append("preDefinedNames", predefinedNames.join("|"));
+      formData.append('preDefinedNames', predefinedNames.join('|'))
     }
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const response = await fetch('/api/upload', {
+        method: 'POST',
         body: formData,
-      });
-      const data = await response.json();
+      })
+      const data = await response.json()
       if (response.ok) {
-        setUploadedImages(data.imageUrls);
-        message.success("文件上传成功");
-        return { uploadedFiles: data.imageUrls };
+        setUploadedImages(data.imageUrls)
+        message.success('文件上传成功')
+        return { uploadedFiles: data.imageUrls }
       } else {
-        console.error("上传失败:", data.error);
-        message.error("文件上传失败，请稍后重试");
+        console.error('上传失败:', data.error)
+        message.error('文件上传失败，请稍后重试')
 
-        return { uploadedFiles: [] };
+        return { uploadedFiles: [] }
       }
     } catch (error) {
-      console.error("上传出错:", error);
-      message.error("文件上传出错，请稍后重试");
-      return { uploadedFiles: [] };
+      console.error('上传出错:', error)
+      message.error('文件上传出错，请稍后重试')
+      return { uploadedFiles: [] }
     } finally {
-      loadingInstance();
+      loadingInstance()
     }
-  };
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
-      return handleUploadWithSpriteCheck(files);
-      // const passAndGoUpload = await beforeUploadCheck(files);
-
-      // if (passAndGoUpload) {
-      //   handleUploadCore(files);
-      // }
+      const files = Array.from(e.target.files)
+      return handleUploadWithSpriteCheck(files)
     }
-  };
-  const handleUploadWithSpriteCheck = async (
-    files: File[],
-    skipCheck = false
-  ) => {
+  }
+  const handleUploadWithSpriteCheck = async (files: File[], skipCheck = false) => {
     if (skipCheck) {
-      return handleUploadCore(files);
+      return handleUploadCore(files)
     }
 
-    const passAndGoUpload = await beforeUploadCheck(files);
+    const passAndGoUpload = await beforeUploadCheck(files)
 
     if (passAndGoUpload) {
-      return handleUploadCore(files);
+      return handleUploadCore(files)
     }
-  };
+  }
 
   /** 检查是否有png图片，如果有则弹窗确认，之后才正式上传 */
   const beforeUploadCheck = (files: File[]) => {
-    const hasPng = files.some((file) =>
-      file.name.toLowerCase().endsWith(".png")
-    );
-    if (hasPng) {
-      setPendingFiles(files);
-      setShowPngModal(true);
-      return Promise.resolve(false);
+    const hasSpecialFile = files.some((file) => {
+      return specialFileExts.some((ext) => file.name.toLowerCase().endsWith(ext))
+    })
+    if (hasSpecialFile) {
+      // 如有特别的待处理文件则走弹窗确认，否则直接上传
+      setPendingFiles(files)
+      setShowPngModal(true)
+      return Promise.resolve(false)
     } else {
-      // handleUpload(files);
-      return Promise.resolve(true);
+      return Promise.resolve(true)
     }
-  };
+  }
 
   const handleCancelPngUpload = () => {
-    setShowPngModal(false);
-    setPendingFiles([]);
-  };
+    setShowPngModal(false)
+    setPendingFiles([])
+  }
 
   const handleClick = () => {
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
 
   return (
     <>
@@ -144,11 +131,7 @@ const UploadButton: React.FC<{
         >
           单一文件上传
         </button>
-        <DirectoryUploadButton
-          // setUploadedImages={setUploadedImages}
-          // onBeforeUpload={async () => true}
-          handleUploadWithSpriteCheck={handleUploadWithSpriteCheck}
-        />
+        <DirectoryUploadButton handleUploadWithSpriteCheck={handleUploadWithSpriteCheck} />
 
         <input
           ref={fileInputRef}
@@ -156,7 +139,7 @@ const UploadButton: React.FC<{
           // 添加 application/xml 支持 xml 文件上传
           accept="image/jpeg, image/png, audio/mpeg, application/json, application/xml"
           onChange={handleFileChange}
-          style={{ display: "none" }}
+          style={{ display: 'none' }}
         />
       </div>
       {showPngModal && (
@@ -168,7 +151,7 @@ const UploadButton: React.FC<{
         />
       )}
     </>
-  );
-};
+  )
+}
 
-export default UploadButton;
+export default UploadButton

@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react'
 import { Button, message, Modal, Table } from 'antd'
 import { IUploadedResult } from './UploadButton'
 import { extractFirstFrameEdges, simplifyVerticesV2 } from '@/utils/webCanvasTool'
-import { calculateSpriteFrames } from '@/utils'
+import { calculateSpriteFrames, getFileExtension } from '@/utils'
 import { Vertices } from 'matter-js'
 import ImgPreviewModal from './ImgPreviewModal'
 import JsonEditorModal from './JsonEditorModal'
-import BPMDetective from '@/utils/bpmDetective'
+import { analyzeAudioBPM } from '@/utils/bpmAnalyzer'
+import { specialFileExts } from '@/constants'
 
 interface IConfirmPngUploadProps {
   files: File[]
-  // onConfirm: (selectedFiles: File[]) => void;
   onClose: () => void
   open: boolean
   uploadHandler: (files: File[]) => Promise<IUploadedResult>
@@ -27,12 +27,13 @@ interface TableRecord {
 
 const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
   files,
-  // onConfirm,
   onClose,
   open,
   uploadHandler,
 }) => {
-  const pngFiles = files.filter((file) => file.name.toLowerCase().endsWith('.png'))
+  const specialFiles = files.filter((file) =>
+    specialFileExts.some((ext) => file.name.toLowerCase().endsWith(ext))
+  )
   const initialSelectedRowKeys: any[] = []
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>(initialSelectedRowKeys)
 
@@ -119,13 +120,6 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
     },
   ]
 
-  const dataSource: TableRecord[] = pngFiles.map((file) => ({
-    key: file.name,
-    file,
-    name: file.name,
-    size: file.size,
-  }))
-
   const rowSelection = {
     selectedRowKeys,
     onChange: async (selectedKeys: React.Key[]) => {
@@ -157,37 +151,79 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
     return result
   }
 
-  async function analyzeAudio(audioBuffer: AudioBuffer) {
-    // 创建检测器实例，可传入自定义参数
-    const detective = new BPMDetective(audioBuffer, {
-      beatsPerBar: 4, // 4/4拍
-      strongBeatThreshold: 1.2, // 强拍阈值
-      timePrecision: 2, // 时间精度（两位小数）
-    })
-
-    // 执行分析
-    const result = await detective.detect()
-
-    // 打印结果
-    console.log(`BPM: ${result.bpm}`)
-    console.log(`置信度: ${result.confidence.toFixed(2)}`)
-    console.log(`总节拍数: ${result.beats.length}`)
-    console.log(`小节数: ${result.barCount}`)
-
-    // 输出每个节拍的信息
-    result.beats.forEach((beat) => {
-      const type = beat.isStrong ? '强拍' : '弱拍'
-      console.log(`节拍 #${beat.index} (${type}): ${beat.time}s`)
-    })
-
-    return result
-  }
-
   interface IExtractSpriteData {
     jsonFile: File
     // 简略版 json 内容
     jsonSnippetObj: any
   }
+
+  const extractAudioMetaToJsonFile = async (
+    audioFile: File
+  ): Promise<IExtractSpriteData | null> => {
+    // @ts-ignore
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+    // 2. 将 File 转换为 ArrayBuffer
+    // @ts-ignore
+    const arrayBuffer: ArrayBuffer = await fileToBuffer(audioFile)
+    console.log(`文件已读取为 ArrayBuffer（大小：${arrayBuffer.byteLength} 字节）`)
+
+    // 3. 解码 ArrayBuffer 为 AudioBuffer
+    const audioBuffer = (await decodeAudioBuffer(audioContext, arrayBuffer)) as AudioBuffer
+
+    const audioInfo = await analyzeAudioBPM(audioBuffer)
+
+    console.log('== 音频信息:', audioInfo)
+
+    const jsonStr = JSON.stringify(audioInfo, null, 2)
+    // 创建 File 对象
+    const resultJsonFile = new File([jsonStr], 'data.json', {
+      type: 'application/json',
+    })
+
+    const result: IExtractSpriteData = {
+      jsonFile: resultJsonFile,
+      jsonSnippetObj: simplifiedJsonObj(audioInfo, ['bpm', 'confidence', 'detectedBeatsPerBar']),
+    }
+
+    console.log('== 图片精简后信息:', result)
+
+    return new Promise((resolve, reject) => {
+      resolve(result)
+    })
+  }
+
+  function fileToBuffer(file: File) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => resolve(e!.target!.result) // 读取成功返回 ArrayBuffer
+      reader.onerror = () => reject(new Error('文件读取失败'))
+      reader.readAsArrayBuffer(file) // 以 ArrayBuffer 形式读取文件
+    })
+  }
+
+  function decodeAudioBuffer(audioContext: AudioContext, arrayBuffer: ArrayBuffer) {
+    return new Promise((resolve, reject) => {
+      audioContext.decodeAudioData(
+        arrayBuffer,
+        (audioBuffer) => resolve(audioBuffer), // 解码成功返回 AudioBuffer
+        (error) => reject(new Error(`解码失败：${error.message}`))
+      )
+    })
+  }
+
+  const extractFileMetaByExt = async (file: File) => {
+    const fileExt = getFileExtension(file.name.toLowerCase())
+
+    switch (fileExt) {
+      case 'png':
+        return await extractSpriteImgMetaToJsonFile(file)
+      case 'mp3':
+        return await extractAudioMetaToJsonFile(file)
+      default:
+        return Promise.resolve(null)
+    }
+  }
+
   const extractSpriteImgMetaToJsonFile = (pngFile: File): Promise<IExtractSpriteData | null> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas')
@@ -230,16 +266,16 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
           )
 
           console.log('== calFrameResult', calFrameResult)
-          if (!calFrameResult || calFrameResult.totalFrames <= 3) {
-            // 无法分析出结果，或检测的帧数较少，暂定其不是sprite图
-            // return reject(new Error("无法计算出帧数"));
-            return resolve(null)
-          }
-          const { frameSize, totalFrames, cols, rows } = calFrameResult || {}
+          // 【25-7-27更新】对普通png也做轮廓提取处理。
+          // if (!calFrameResult || calFrameResult.totalFrames <= 3) {
+          //   // 无法分析出结果，或检测的帧数较少，暂定其不是sprite图
+          //   // return reject(new Error("无法计算出帧数"));
+          //   return resolve(null)
+          // }
+          const { frameSize, totalFrames = 1, cols = 1, rows = 1 } = calFrameResult || {}
 
           const sortedVertices = Vertices.clockwiseSort(vertices)
-          // const simplifiedVertices = simplifyVerticesV2(sortedVertices);
-          // const simplifiedVertices30 = simplifyVerticesV2(sortedVertices, 30);
+
           const simplifiedVertices20 = simplifyVerticesV2(sortedVertices, 20)
 
           const imageInfo: any = {
@@ -277,27 +313,11 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
           nativeImage.src = event.target.result as string
         }
       }
-      console.log('开始读取文件...')
-      reader.readAsDataURL(file)
 
-      // const jsonStr = JSON.stringify(spriteMeta, null, 2);
-      // // 创建 File 对象
-      // const file = new File([jsonStr], "data.json", {
-      //   type: "application/json",
-      // });
-      // return file;
+      reader.readAsDataURL(file)
     })
   }
   const handleConfirm = async () => {
-    // const [firstSelectedFileObj] = dataSource;
-
-    // const extractedJsonFile = await extractSpriteImgMetaToJsonFile(
-    //   firstSelectedFileObj.file
-    // );
-
-    // console.log("== extractedJsonFile: ", extractedJsonFile);
-
-    // onClose();
     // return;
     // 第1步：上传原文件列表
     // 第2步：提取选中的png图片，将信息保存到json元文件中
@@ -312,44 +332,26 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
 
       const mappedSpriteFiles = selectedFulSpriteFilesInfo.map((item: any) => {
         const uploadedFile = uploadedFiles.find((file: any) => file.originalName === item.name)
-
-        console.log('==** uploadedFiles', uploadedFiles)
-        console.log('==** uploadedFile', uploadedFile)
-
         const urlObj = new URL(uploadedFile.url)
         const preDefinedName = urlObj.pathname.replace('.png', '.json')
 
-        console.log('==** preDefinedName', preDefinedName)
         if (item.jsonFile) {
           item.jsonFile.preDefinedName = preDefinedName
         }
         return item.jsonFile
       })
 
-      console.log('==** mappedSpriteFiles', mappedSpriteFiles)
-
       await uploadHandler(mappedSpriteFiles)
-
-      // return;
     }
 
     onClose()
-
-    // { url, originalName } = uploadedFiles;
-
-    // const selectedFiles = dataSource
-    //   .filter((item) => selectedRowKeys.includes(item.key))
-    //   .map((item) => item.file);
-
-    // await uploadHandler(selectedFiles);
-    // onConfirm(selectedFiles);
   }
 
   useEffect(() => {
     const asyncInit = async () => {
       console.log('selectedRowKeys: ', selectedRowKeys)
       if (open) {
-        const mappedFiles = pngFiles.map((file) => {
+        const mappedFiles = specialFiles.map((file) => {
           return {
             key: file.name,
             file,
@@ -361,7 +363,8 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
         })
 
         for (let item of mappedFiles) {
-          const extractedJsonObj = await extractSpriteImgMetaToJsonFile(item.file)
+          // const extractedJsonObj = await extractSpriteImgMetaToJsonFile(item.file)
+          const extractedJsonObj = await extractFileMetaByExt(item.file)
 
           // @ts-ignore
           item.jsonFile = extractedJsonObj?.jsonFile
@@ -369,19 +372,6 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
         }
 
         setTableDataSource(mappedFiles)
-
-        // setSpriteInfoFiles(mappedFiles)
-
-        // const clonedDataSource = [...dataSource]
-        // mappedFiles.forEach((item) => {
-        //   const dataSorceItem = clonedDataSource.find((sourceItem) => sourceItem.key === item.key)
-        //   if (dataSorceItem) {
-        //     dataSorceItem.jsonFile = item.jsonFile
-        //     dataSorceItem.jsonSnippetObj = item.jsonSnippetObj
-        //   }
-        // })
-
-        // setTableDataSource(clonedDataSource)
 
         const detectedSpriteFile = mappedFiles.filter((item: any) => item.jsonFile)
 
