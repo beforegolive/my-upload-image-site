@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Button, message, Modal, Table } from 'antd'
 import { IUploadedResult } from './UploadButton'
 import { extractFirstFrameEdges, simplifyVerticesV2 } from '@/utils/webCanvasTool'
-import { calculateSpriteFrames, getFileExtension } from '@/utils'
+import { calculateSpriteFrames, getFileExtension, getFileIconByUrl } from '@/utils'
 import { Vertices } from 'matter-js'
 import ImgPreviewModal from './ImgPreviewModal'
 import JsonEditorModal from './JsonEditorModal'
@@ -54,24 +54,27 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
       dataIndex: 'thumbnail',
       key: 'thumbnail',
       width: '100px',
-      render: (_: any, record: TableRecord) => (
-        <img
-          src={URL.createObjectURL(record.file)}
-          alt={record.file.name}
-          style={{ width: 50, height: 50, objectFit: 'cover' }}
-          onClick={() => {
-            const { name } = record
-            if (!name.toLocaleLowerCase().endsWith('.png')) {
-              message.info('仅png图片支持预览')
-              return
-            }
+      render: (_: any, record: TableRecord) => {
+        const displayIcon = getFileIconByUrl(record.name)
+        return (
+          <img
+            src={displayIcon.icon || URL.createObjectURL(record.file)}
+            alt={record.file.name}
+            style={{ width: 50, height: 50, objectFit: 'cover' }}
+            onClick={() => {
+              const { name } = record
+              if (!name.toLocaleLowerCase().endsWith('.png')) {
+                message.info('仅png图片支持预览')
+                return
+              }
 
-            setPreviewImage(URL.createObjectURL(record.file))
-            setPreviewImageName(record.file.name)
-            setPreviewVisible(true)
-          }}
-        />
-      ),
+              setPreviewImage(URL.createObjectURL(record.file))
+              setPreviewImageName(record.file.name)
+              setPreviewVisible(true)
+            }}
+          />
+        )
+      },
     },
     {
       title: '图片名',
@@ -333,11 +336,16 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
       const mappedSpriteFiles = selectedFulSpriteFilesInfo.map((item: any) => {
         const uploadedFile = uploadedFiles.find((file: any) => file.originalName === item.name)
         const urlObj = new URL(uploadedFile.url)
-        const preDefinedName = urlObj.pathname.replace('.png', '.json')
 
-        if (item.jsonFile) {
-          item.jsonFile.preDefinedName = preDefinedName
-        }
+        specialFileExts.forEach((ext) => {
+          if (urlObj.pathname.endsWith(ext)) {
+            const preDefinedName = urlObj.pathname.replace(ext, '.json')
+            if (item.jsonFile) {
+              item.jsonFile.preDefinedName = preDefinedName
+            }
+          }
+        })
+
         return item.jsonFile
       })
 

@@ -3,10 +3,8 @@ import React, { useState } from 'react'
 import ImagePreviewModal from './ImagePreviewModal'
 import { Image } from '../types'
 // import { useSnackbar } from "notistack";
-import jsonIcon from '@/assets/imgs/json_icon.png'
-import mp3Icon from '@/assets/imgs/mp3_icon.jpeg'
-import xmlIcon from '@/assets/imgs/xml_icon.png' // 假设图标路径是这样，根据实际情况调整
-import { replaceDomain } from '@/utils'
+
+import { getFileIconByUrl, replaceDomain } from '@/utils'
 import { App } from 'antd'
 import copy from 'copy-to-clipboard'
 import ImgPreviewModal from './ImgPreviewModal'
@@ -70,7 +68,7 @@ const ImageList: React.FC<ImageListProps> = ({ images, onImageClick }) => {
         const isJson = fileExtension.toLowerCase() === 'json'
         const isMp3 = fileExtension.toLowerCase() === 'mp3'
         const isXml = fileExtension.toLowerCase() === 'xml'
-        const displayIcon = isJson ? jsonIcon : isMp3 ? mp3Icon : isXml ? xmlIcon : null
+        const displayIcon = getFileIconByUrl(url)
         const fileExtensionWithDimensions =
           isJson || isMp3 || isXml ? fileExtension : `${fileExtension} (${width}x${height})`
 

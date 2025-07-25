@@ -1,3 +1,11 @@
+// 引入图标资源
+// @ts-ignore
+import jsonIcon from '@/assets/imgs/json_icon.png'
+// @ts-ignore
+import mp3Icon from '@/assets/imgs/mp3_icon.jpeg'
+// @ts-ignore
+import xmlIcon from '@/assets/imgs/xml_icon.png'
+
 const defaultDomain = 'beforegolive.com'
 export function replaceDomain(url: string, targetDomain: string = defaultDomain) {
   try {
@@ -191,4 +199,64 @@ export function getFileExtension(filename: string) {
   }
 
   return filename.substring(lastDotIndex + 1)
+}
+
+export function getFileInfo(filename: string): { name: string; extension: string } {
+  // 初始化返回对象
+  const result = { name: '', extension: '' }
+
+  // 处理非字符串或空输入
+  if (typeof filename !== 'string' || filename.length === 0) {
+    return result
+  }
+
+  // 处理以点开头的隐藏文件（无扩展名）
+  if (filename.startsWith('.') && filename.indexOf('.', 1) === -1) {
+    result.name = filename
+    return result
+  }
+
+  // 查找最后一个点的位置
+  const lastDotIndex = filename.lastIndexOf('.')
+
+  // 处理无扩展名的情况
+  if (lastDotIndex === -1 || lastDotIndex === filename.length - 1) {
+    result.name = filename
+    return result
+  }
+
+  // 提取文件名和扩展名
+  result.name = filename.substring(0, lastDotIndex)
+  result.extension = filename.substring(lastDotIndex + 1)
+
+  return result
+}
+
+/**
+ * 根据文件URL获取对应的显示图标
+ * @param {string} name - 文件名或远端的url地址，主要以文件后缀为依据
+ * @returns {string|null} - 图标资源路径（无匹配时返回null）
+ */
+export const getFileIconByUrl = (name: string) => {
+  if (!name || typeof name !== 'string') {
+    return null // URL无效时返回null
+  }
+
+  // 从URL中提取文件名（处理URL中的查询参数或哈希）
+  const urlPath = name.split('?')[0].split('#')[0] // 去除查询参数和哈希
+  const fileName = urlPath.split('/').pop() || '' // 提取最后一段作为文件名
+
+  // 提取文件后缀（忽略大小写）
+  const lastDotIndex = fileName.lastIndexOf('.')
+  const fileExtension = lastDotIndex > -1 ? fileName.substring(lastDotIndex + 1).toLowerCase() : ''
+
+  // 根据后缀匹配图标
+  const iconMap: any = {
+    json: jsonIcon,
+    mp3: mp3Icon,
+    xml: xmlIcon,
+    // 可扩展其他后缀对应的图标
+  }
+
+  return iconMap[fileExtension] || null
 }

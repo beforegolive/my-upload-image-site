@@ -104,7 +104,7 @@ export class BPMAnalyzer {
 
     return {
       bpm,
-      confidence,
+      confidence: Math.round(confidence * 1000) / 1000,
       beats,
       barCount: Math.ceil(beats.length / effectiveBeatsPerBar),
       beatsPerBar: effectiveBeatsPerBar,
