@@ -58,7 +58,7 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
         const displayIcon = getFileIconByUrl(record.name)
         return (
           <img
-            src={displayIcon.icon || URL.createObjectURL(record.file)}
+            src={displayIcon?.src || URL.createObjectURL(record.file)}
             alt={record.file.name}
             style={{ width: 50, height: 50, objectFit: 'cover' }}
             onClick={() => {

@@ -103,6 +103,7 @@ const UploadButton: React.FC<{
     const hasSpecialFile = files.some((file) => {
       return specialFileExts.some((ext) => file.name.toLowerCase().endsWith(ext))
     })
+    console.log('** hasSpecialFile:', hasSpecialFile)
     if (hasSpecialFile) {
       // 如有特别的待处理文件则走弹窗确认，否则直接上传
       setPendingFiles(files)
