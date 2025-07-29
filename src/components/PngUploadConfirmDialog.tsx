@@ -48,6 +48,8 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
 
   const [tableDataSource, setTableDataSource] = useState<any>([])
 
+  const [inited, setInited] = useState(false)
+
   const columns = [
     {
       title: '缩略图',
@@ -356,44 +358,53 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
   }
 
   useEffect(() => {
-    const asyncInit = async () => {
-      console.log('selectedRowKeys: ', selectedRowKeys)
-      if (open) {
-        const mappedFiles = specialFiles.map((file) => {
-          return {
-            key: file.name,
-            file,
-            name: file.name,
-            size: file.size,
-            jsonFile: null,
-            jsonSnippetObj: null,
+    if (open) {
+      const asyncInit = async () => {
+        console.log('selectedRowKeys: ', selectedRowKeys)
+        if (open) {
+          const mappedFiles = specialFiles.map((file) => {
+            return {
+              key: file.name,
+              file,
+              name: file.name,
+              size: file.size,
+              jsonFile: null,
+              jsonSnippetObj: null,
+            }
+          })
+
+          for (let item of mappedFiles) {
+            // const extractedJsonObj = await extractSpriteImgMetaToJsonFile(item.file)
+            const extractedJsonObj = await extractFileMetaByExt(item.file)
+
+            // @ts-ignore
+            item.jsonFile = extractedJsonObj?.jsonFile
+            item.jsonSnippetObj = extractedJsonObj?.jsonSnippetObj
           }
-        })
 
-        for (let item of mappedFiles) {
-          // const extractedJsonObj = await extractSpriteImgMetaToJsonFile(item.file)
-          const extractedJsonObj = await extractFileMetaByExt(item.file)
+          setTableDataSource(mappedFiles)
 
-          // @ts-ignore
-          item.jsonFile = extractedJsonObj?.jsonFile
-          item.jsonSnippetObj = extractedJsonObj?.jsonSnippetObj
+          const detectedSpriteFile = mappedFiles.filter((item: any) => item.jsonFile)
+
+          const detectedSpriteFileNames = detectedSpriteFile.map((item: any) => item.name)
+
+          console.log('=== mappedFiles', mappedFiles)
+          console.log('=== detectedSpriteFile', detectedSpriteFile)
+          console.log('=== detectedSpriteFileNames', detectedSpriteFileNames)
+          setSelectedRowKeys(detectedSpriteFileNames)
         }
-
-        setTableDataSource(mappedFiles)
-
-        const detectedSpriteFile = mappedFiles.filter((item: any) => item.jsonFile)
-
-        const detectedSpriteFileNames = detectedSpriteFile.map((item: any) => item.name)
-
-        console.log('=== mappedFiles', mappedFiles)
-        console.log('=== detectedSpriteFile', detectedSpriteFile)
-        console.log('=== detectedSpriteFileNames', detectedSpriteFileNames)
-        setSelectedRowKeys(detectedSpriteFileNames)
       }
+
+      asyncInit()
+      setInited(true)
     }
 
-    asyncInit()
+    return () => {
+      setInited(false)
+    }
   }, [open])
+
+  const showLoading = specialFiles?.length > 0 && !inited
 
   return (
     <>
@@ -404,14 +415,20 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
         onCancel={onClose}
         width={'85vw'}
       >
-        <p>从勾选的图片中提取动效信息并以json格式上传</p>
-        <Table
-          columns={columns}
-          dataSource={tableDataSource}
-          pagination={false}
-          style={{ marginTop: 16 }}
-          rowSelection={rowSelection}
-        />
+        {showLoading ? (
+          <div>loading...</div>
+        ) : (
+          <>
+            <p>从勾选的图片中提取动效信息并以json格式上传</p>
+            <Table
+              columns={columns}
+              dataSource={tableDataSource}
+              pagination={false}
+              style={{ marginTop: 16 }}
+              rowSelection={rowSelection}
+            />
+          </>
+        )}
       </Modal>
 
       <ImgPreviewModal

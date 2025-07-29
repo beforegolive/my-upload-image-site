@@ -8,7 +8,8 @@ import { isEmpty } from '@/utils'
 import { specialFileExts } from '@/constants'
 // import { isEmpty } from "@/utils";
 
-const maxLoadingToastDurationMs = 5000
+// 默认Toast最长显示60秒
+const maxLoadingToastDurationMs = 60000
 
 export interface IUploadedResult {
   uploadedFiles: any[]
