@@ -31,6 +31,10 @@ export interface BPMResult {
   barCount: number
   beatsPerBar: number
   detectedBeatsPerBar: number
+  duration?: number
+  length?: number
+  numberOfChannels?: number
+  sampleRate?: number
 }
 
 /**

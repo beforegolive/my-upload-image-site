@@ -177,9 +177,18 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
 
     const audioInfo = await analyzeAudioBPM(audioBuffer)
 
+    // 将音频的时长、采样率等信息也放到meta中
+    const mergedAudioInfo = {
+      ...audioInfo,
+      duration: Math.round(audioBuffer.duration * 100) / 100,
+      length: audioBuffer.length,
+      numberOfChannels: audioBuffer.numberOfChannels,
+      sampleRate: audioBuffer.sampleRate,
+    }
+
     console.log('== 音频信息:', audioInfo)
 
-    const jsonStr = JSON.stringify(audioInfo, null, 2)
+    const jsonStr = JSON.stringify(mergedAudioInfo, null, 2)
     // 创建 File 对象
     const resultJsonFile = new File([jsonStr], 'data.json', {
       type: 'application/json',
@@ -187,7 +196,12 @@ const PngUploadConfirmModal: React.FC<IConfirmPngUploadProps> = ({
 
     const result: IExtractSpriteData = {
       jsonFile: resultJsonFile,
-      jsonSnippetObj: simplifiedJsonObj(audioInfo, ['bpm', 'confidence', 'detectedBeatsPerBar']),
+      jsonSnippetObj: simplifiedJsonObj(audioInfo, [
+        'bpm',
+        'duration',
+        'confidence',
+        'detectedBeatsPerBar',
+      ]),
     }
 
     console.log('== 图片精简后信息:', result)
