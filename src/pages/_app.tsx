@@ -22,6 +22,7 @@ import React from "react";
 import { ConfigProvider, App } from "antd";
 import type { AppProps } from "next/app";
 import "@/styles/globals.css";
+import Layout from "@/components/Layout";
 // import { SnackbarProvider } from "notistack";
 
 // import theme from "./theme/themeConfig";
@@ -38,7 +39,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => (
       }}
       autoHideDuration={2000} // 设置默认显示时间为 50000 毫秒（即 50 秒）
     > */}
-      <Component {...pageProps} />
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
     </App>
     {/* </SnackbarProvider> */}
   </ConfigProvider>

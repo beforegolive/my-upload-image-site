@@ -1,6 +1,6 @@
 // src/pages/index.tsx
-import React, { useState, useEffect } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import React, { useState, useEffect, useRef } from "react";
+import { useAtom } from "jotai";
 import { uploadedImagesAtom } from "../atoms";
 import ImageList from "../components/ImageList";
 import UploadButton from "../components/UploadButton";
@@ -9,6 +9,9 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { App } from "antd";
 import { maxLoadingToastDurationMs } from "@/constants";
+import { Typography } from "antd";
+
+const { Title } = Typography;
 
 const defaultSnackBarKey = "";
 const HomePage: React.FC = () => {
@@ -16,29 +19,28 @@ const HomePage: React.FC = () => {
   // const adminToken = searchParams.get("token") || "";
   const { message } = App.useApp();
   const [uploadedImages, setUploadedImages] = useAtom(uploadedImagesAtom);
-  const [loadingHistory, setLoadingHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const [totalPages, setTotalPages] = useState(0);
-  // const [loadingMessage, setLoadingMessage] = useState<any>(null);
+  const loadingRef = useRef<ReturnType<typeof message.loading> | null>(null);
 
   const fillImagesAtStart = (imgs: any[]) => {
-    // const latestImgs = useAtomValue(uploadedImagesAtom);
-    // setUploadedImages([...imgs, ...uploadedImages]);
-
     setUploadedImages((prev) => {
       return [...imgs, ...prev];
     });
   };
 
   const fetchHistoryImages = async () => {
-    setLoadingHistory(true);
-    // setLoadingMessage(
-    const hideMsg = message.loading(
+    // 如果已有 loading，先关闭
+    if (loadingRef.current) {
+      loadingRef.current();
+      loadingRef.current = null;
+    }
+
+    loadingRef.current = message.loading(
       "加载图片中...",
       maxLoadingToastDurationMs / 1000
     );
-    // );
 
     try {
       const response = await fetch(
@@ -57,11 +59,10 @@ const HomePage: React.FC = () => {
       console.error("获取历史图片出错:", error);
       message.error("获取历史图片出错，请稍后重试");
     } finally {
-      setLoadingHistory(false);
-      hideMsg();
-      // if (loadingMessage) {
-      //   loadingMessage();
-      // }
+      if (loadingRef.current) {
+        loadingRef.current();
+        loadingRef.current = null;
+      }
     }
   };
 
@@ -91,29 +92,18 @@ const HomePage: React.FC = () => {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  const handleLogout = () => {
-    Cookies.remove("token");
-    router.push("/login");
-  };
-
   const handleTitleClick = () => {
     window.location.reload();
   };
 
   return (
-    <div className="p-8 relative">
+    <div>
       <h1
         onClick={handleTitleClick}
-        className="text-4xl font-bold mb-4 cursor-pointer text-white"
+        className="text-4xl font-bold mb-4 cursor-pointer text-black"
       >
-        文件上传站点
+        文件管理
       </h1>
-      <button
-        onClick={handleLogout}
-        className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 text-sm rounded-md"
-      >
-        退出登录
-      </button>
       <UploadButton setUploadedImages={fillImagesAtStart} />
       {/* 在图片列表上方添加分页组件，并添加边距 */}
       <div className="mt-4 mb-4">
