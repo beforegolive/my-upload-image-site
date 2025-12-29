@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Button, Upload, message, Card, Space, Typography, Spin, Collapse, Tabs, Table, CollapseProps, Switch, Slider } from 'antd'
-import { UploadOutlined, FileImageOutlined, DownloadOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
+import { Button, Upload, message, Card, Space, Typography, Spin, Collapse, Tabs, Table, CollapseProps, Switch, Slider, Row, Col } from 'antd'
+import { UploadOutlined, FileImageOutlined, DownloadOutlined, EyeOutlined, EyeInvisibleOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd'
 import JsonEditorModal from '@/components/JsonEditorModal'
+import PhaserBox2DPreview from '@/components/PhaserBox2DPreview'
 import { calculateSpriteFrames, getFileInfo } from '@/utils'
 import { analyzeImagePhysics, exportToPhysicsEditorXML, PhysicsAnalysisResult, PhysicsVertex } from '@/utils/physicsAnalyzer'
 
@@ -420,6 +421,27 @@ const ImageAnalysisPage: React.FC = () => {
 
   // 构建物理分析展示的折叠面板
   const physicsCollapseItems: CollapseProps['items'] = physicsResult ? [
+    {
+      key: 'phaser-preview',
+      label: (
+        <span>
+          <PlayCircleOutlined style={{ marginRight: 8 }} />
+          Phaser Box2D 预览
+        </span>
+      ),
+      children: (
+        <div>
+          <PhaserBox2DPreview
+            physicsResult={physicsResult}
+            imageUrl={imageUrl}
+            width={Math.min(500, analysisData?.dimensions.width || 500)}
+            height={Math.min(500, analysisData?.dimensions.height || 500)}
+            showDebug={true}
+            enablePhysics={true}
+          />
+        </div>
+      ),
+    },
     {
       key: 'visualizer',
       label: '可视化预览',
